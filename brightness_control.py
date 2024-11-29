@@ -17,14 +17,19 @@ BRIGHTNESS_MAX = 70  # Maximum brightness (%)
 UPDATE_INTERVAL = 60  # Update interval in seconds
 
 COORDINATES_FILE = "coordinates.json"  # File to store coordinates
+MESSAGES = False  # Set to True to enable print messages
+
+def log(message):
+    if MESSAGES:
+        print(message)
 
 def save_coordinates_to_file(latitude, longitude):
     try:
         with open(COORDINATES_FILE, "w") as file:
             json.dump({"latitude": latitude, "longitude": longitude},  file)
-        print("Coordinates saved locally.")
+        log("Coordinates saved locally.")
     except Exception as e:
-        print(f"Error saving coordinates: {e}")
+        log(f"Error saving coordinates: {e}")
 
 def load_coordinates_from_file():
     if os.path.exists(COORDINATES_FILE):
@@ -33,7 +38,7 @@ def load_coordinates_from_file():
                 data = json.load(file)
                 return data.get("latitude"), data.get("longitude")
         except Exception as e:
-            print(f"Error loading coordinates: {e}")
+            log(f"Error loading coordinates: {e}")
     return None, None
 
 def get_coordinates_by_ip():
@@ -47,9 +52,9 @@ def get_coordinates_by_ip():
         else:
             raise ValueError("Location data not found in response.")
     except requests.RequestException as e:
-        print(f"Error fetching location data: {e}")
+        log(f"Error fetching location data: {e}")
     except ValueError as e:
-        print(f"Error parsing location data: {e}")
+        log(f"Error parsing location data: {e}")
 
     return None, None
 
@@ -62,16 +67,16 @@ def get_coordinates():
         if latitude is not None and longitude is not None:
             save_coordinates_to_file(latitude, longitude)
     except Exception as e:
-        print(f"Error fetching coordinates online: {e}")
+        log(f"Error fetching coordinates online: {e}")
 
     # If coordinates are still None, try to load them from local file
     if latitude is None or longitude is None:
-        print("Attempting to load coordinates from local file...")
+        log("Attempting to load coordinates from local file...")
         latitude, longitude = load_coordinates_from_file()
 
     # If coordinates are still None, use default coordinates
     if latitude is None or longitude is None:
-        print("Error: Unable to determine coordinates. Exiting.")
+        log("Error: Unable to determine coordinates. Exiting.")
         ctypes.windll.user32.MessageBoxW(0, "Error: Unable to determine coordinates. Exiting\nBut you can set them manually in the code :)", "Error", 0)
         sys.exit(1)
 
@@ -111,9 +116,9 @@ def set_monitor_brightness(brightness, monitors):
                 if hasattr(monitor, 'set_luminance'):
                     monitor.set_luminance(brightness)
                 else:
-                    print(f"The {monitor} monitor does not support brightness control.")
+                    log(f"The {monitor} monitor does not support brightness control.")
         except Exception as e:
-                print(f" Error setting brightness: {e}")
+                log(f" Error setting brightness: {e}")
 
 def main():
     latitude, longitude = get_coordinates()
@@ -125,7 +130,7 @@ def main():
         if not monitors:
             raise RuntimeError("No monitors found.")
     except Exception as e:
-        print(f"Error getting monitors: {e}")
+        log(f"Error getting monitors: {e}")
         return
 
     while True:
@@ -137,11 +142,8 @@ def main():
         brightness = calculate_brightness(sunrise, sunset, current_time)
         set_monitor_brightness(brightness, monitors)
 
-        print("Current time:", current_time)
-        print("Sunrise:", sunrise)
-        print("Sunset:", sunset)
-        print("Brightness:", brightness)
-        print("Coordinates:", latitude, longitude)
+        log(f"Current time: {current_time}, Sunrise: {sunrise}, Sunset: {sunset}, Brightness: {brightness}")
+        log(f"Coordinates: {latitude}, {longitude}")
 
         time.sleep(UPDATE_INTERVAL)
 
