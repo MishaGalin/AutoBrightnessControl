@@ -1,5 +1,9 @@
+import sys
 import time
-import matplotlib.pyplot as plt
+import os
+import json
+import requests
+import ctypes
 from math import sin, pi
 from datetime import datetime, timedelta
 from pytz import timezone
@@ -8,21 +12,76 @@ from astral import LocationInfo
 from monitorcontrol import get_monitors
 from timezonefinder import TimezoneFinder
 
-# Location parameters
-CITY_NAME = "Ufa"
-COUNTRY_NAME = "Russia"
-LATITUDE = 54.738762  # Your coordinates
-LONGITUDE = 55.972054
 BRIGHTNESS_MIN = 0  # Minimum brightness (%)
 BRIGHTNESS_MAX = 70  # Maximum brightness (%)
 UPDATE_INTERVAL = 60  # Update interval in seconds
 
+COORDINATES_FILE = "coordinates.json"  # File to store coordinates
+
+def save_coordinates_to_file(latitude, longitude):
+    try:
+        with open(COORDINATES_FILE, "w") as file:
+            json.dump({"latitude": latitude, "longitude": longitude},  file)
+        print("Coordinates saved locally.")
+    except Exception as e:
+        print(f"Error saving coordinates: {e}")
+
+def load_coordinates_from_file():
+    if os.path.exists(COORDINATES_FILE):
+        try:
+            with open(COORDINATES_FILE, "r") as file:
+                data = json.load(file)
+                return data.get("latitude"), data.get("longitude")
+        except Exception as e:
+            print(f"Error loading coordinates: {e}")
+    return None, None
+
+def get_coordinates_by_ip():
+    try:
+        response = requests.get("http://ipinfo.io/json", timeout=10)
+        response.raise_for_status()  # Raise an exception if the request was unsuccessful
+        data = response.json()
+        if "loc" in data:
+            latitude, longitude = map(float, data["loc"].split(","))
+            return latitude, longitude
+        else:
+            raise ValueError("Location data not found in response.")
+    except requests.RequestException as e:
+        print(f"Error fetching location data: {e}")
+    except ValueError as e:
+        print(f"Error parsing location data: {e}")
+
+    return None, None
+
+def get_coordinates():
+    latitude, longitude = None, None
+
+    # Try to fetch coordinates online
+    try:
+        latitude, longitude = get_coordinates_by_ip()
+        if latitude is not None and longitude is not None:
+            save_coordinates_to_file(latitude, longitude)
+    except Exception as e:
+        print(f"Error fetching coordinates online: {e}")
+
+    # If coordinates are still None, try to load them from local file
+    if latitude is None or longitude is None:
+        print("Attempting to load coordinates from local file...")
+        latitude, longitude = load_coordinates_from_file()
+
+    # If coordinates are still None, use default coordinates
+    if latitude is None or longitude is None:
+        print("Error: Unable to determine coordinates. Exiting.")
+        ctypes.windll.user32.MessageBoxW(0, "Error: Unable to determine coordinates. Exiting\nBut you can set them manually in the code :)", "Error", 0)
+        sys.exit(1)
+
+    return latitude, longitude
+
 def get_timezone_from_coordinates(latitude, longitude):
-    """Определяет временную зону по координатам."""
     tf = TimezoneFinder()
     timezone_name = tf.certain_timezone_at(lng=longitude, lat=latitude)
     if timezone_name is None:
-        raise ValueError("Не удалось определить временную зону по указанным координатам.")
+        raise ValueError("Can't find timezone by given coordinates. ")
     return timezone(timezone_name)
 
 def calculate_brightness(sunrise, sunset, current_time):
@@ -46,79 +105,44 @@ def calculate_brightness(sunrise, sunset, current_time):
     return max(BRIGHTNESS_MIN, min(BRIGHTNESS_MAX, brightness))
 
 def set_monitor_brightness(brightness, monitors):
-    """Устанавливает яркость для мониторов."""
     for monitor in monitors:
         try:
             with monitor:
                 if hasattr(monitor, 'set_luminance'):
                     monitor.set_luminance(brightness)
                 else:
-                    print(f"Монитор {monitor} не поддерживает управление яркостью.")
+                    print(f"The {monitor} monitor does not support brightness control.")
         except Exception as e:
-            print(f"Ошибка установки яркости для монитора: {e}")
-
-def plot_brightness_over_day(sunrise, sunset):
-    """
-    Plots the brightness change throughout the day.
-    """
-    times = []
-    brightness_values = []
-
-    # Split the day into intervals for display
-    current_time = sunrise
-
-    for _ in range(25):
-        brightness = calculate_brightness(sunrise, sunset, current_time)
-        times.append(current_time.strftime("%H:%M"))
-        brightness_values.append(brightness)
-        current_time += timedelta(hours=1)
-
-    # Display the plot
-    plt.figure(figsize=(10, 5))
-    plt.plot(times, brightness_values, label="Brightness", color='blue')
-    plt.xlabel("Time")
-    plt.ylabel("Brightness (%)")
-    plt.title(f"Brightness Change Throughout the Day ({CITY_NAME})")
-    plt.xticks(rotation=45)
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show()
+                print(f" Error setting brightness: {e}")
 
 def main():
-    # Определение временной зоны
-    tz = get_timezone_from_coordinates(LATITUDE, LONGITUDE)
-    location = LocationInfo(CITY_NAME, COUNTRY_NAME, tz.zone, LATITUDE, LONGITUDE)
+    latitude, longitude = get_coordinates()
+    tz = get_timezone_from_coordinates(latitude, longitude)
+    location = LocationInfo(timezone=tz.zone, latitude=latitude, longitude=longitude)
 
-    # Получение списка мониторов
     try:
         monitors = get_monitors()
         if not monitors:
-            raise RuntimeError("Не удалось найти мониторы для управления яркостью.")
+            raise RuntimeError("No monitors found.")
     except Exception as e:
-        print(f"Ошибка получения списка мониторов: {e}")
+        print(f"Error getting monitors: {e}")
         return
 
     while True:
         current_time = datetime.now(tz)
 
-        # Get sunrise and sunset times with respect to the time zone
         s = sun(location.observer, date=current_time.date(), tzinfo=tz)
         sunrise, sunset = s["sunrise"], s["sunset"]
 
-        # Calculate brightness
         brightness = calculate_brightness(sunrise, sunset, current_time)
         set_monitor_brightness(brightness, monitors)
 
-        # Re-enable matplotlib import for debugging
-        # Plot brightness for the entire day (only once)
-        #plot_brightness_over_day(sunrise, sunset)
+        print("Current time:", current_time)
+        print("Sunrise:", sunrise)
+        print("Sunset:", sunset)
+        print("Brightness:", brightness)
+        print("Coordinates:", latitude, longitude)
 
-        #print(f"Current time: {current_time}")
-        #print(f"Sunrise: {sunrise}")
-        #print(f"Sunset: {sunset}")
-        #print(f"Brightness: {brightness}%")
-
-        # Pause until the next update
         time.sleep(UPDATE_INTERVAL)
 
 
