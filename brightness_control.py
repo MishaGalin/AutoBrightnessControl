@@ -4,6 +4,7 @@ import os
 import json
 import requests
 import ctypes
+import argparse
 from math import sin, pi
 from datetime import datetime, timedelta
 from pytz import timezone
@@ -12,10 +13,7 @@ from astral import LocationInfo
 from monitorcontrol import get_monitors
 from timezonefinder import TimezoneFinder
 
-BRIGHTNESS_MIN = 0  # Minimum brightness (%)
-BRIGHTNESS_MAX = 70  # Maximum brightness (%)
 UPDATE_INTERVAL = 60  # Update interval in seconds
-
 COORDINATES_FILE = "coordinates.json"  # File to store coordinates
 LOG_FILE = "brightness_control.txt"
 LOG = False  # Set to True to enable logging
@@ -91,7 +89,7 @@ def get_timezone_from_coordinates(latitude, longitude):
         raise ValueError("Can't find timezone by given coordinates. ")
     return timezone(timezone_name)
 
-def calculate_brightness(sunrise, sunset, current_time):
+def calculate_brightness(sunrise, sunset, current_time, brightness_min, brightness_max):
     """
     Calculates brightness based on current time and sunrise/sunset times.
     Brightness is maximum at midday and minimum at midnight.
@@ -101,15 +99,15 @@ def calculate_brightness(sunrise, sunset, current_time):
 
     if sunrise <= current_time <= sunset:  # Daytime phase
         progress = (current_time - sunrise).total_seconds() / day_duration
-        brightness = round(BRIGHTNESS_MIN + (BRIGHTNESS_MAX - BRIGHTNESS_MIN) * (sin(pi * (progress - 0.5) + pi/2) + 1) / 2)
+        brightness = round(brightness_min + (brightness_max - brightness_min) * (sin(pi * (progress - 0.5) + pi/2) + 1) / 2)
     else:  # Night phase
         if current_time > sunset:
             progress = (current_time - sunset).total_seconds() / night_duration
         else:
             progress = (current_time - sunset + timedelta(days=1)).total_seconds() / night_duration
-        brightness = round(BRIGHTNESS_MAX - (BRIGHTNESS_MAX - BRIGHTNESS_MIN) * (sin(pi * (progress - 0.5) + pi/2) + 1) / 2)
+        brightness = round(brightness_max - (brightness_max - brightness_min) * (sin(pi * (progress - 0.5) + pi/2) + 1) / 2)
 
-    return max(BRIGHTNESS_MIN, min(BRIGHTNESS_MAX, brightness))
+    return max(brightness_min, min(brightness_max, brightness))
 
 def set_monitor_brightness(brightness, monitors):
     for monitor in monitors:
@@ -123,9 +121,24 @@ def set_monitor_brightness(brightness, monitors):
                 log(f" Error setting brightness: {e}")
 
 def main():
+    default_min_brightness = 20
+    default_max_brightness = 70
+
+    parser = argparse.ArgumentParser(description="Brightness control based on sunrise and sunset.")
+    parser.add_argument("--min", type=int, default=default_min_brightness, help=f"Minimum brightness (default: {default_min_brightness})")
+    parser.add_argument("--max", type=int, default=default_max_brightness, help=f"Maximum brightness (default: {default_max_brightness})")
+    args = parser.parse_args()
+
+    brightness_min = args.min
+    brightness_max = args.max
+
+    log(f"Brightness range set: {brightness_min}% - {brightness_max}%")
+
     latitude, longitude = get_coordinates()
     tz = get_timezone_from_coordinates(latitude, longitude)
     location = LocationInfo(timezone=tz.zone, latitude=latitude, longitude=longitude)
+
+    log(f"Coordinates: {latitude}, {longitude}")
 
     try:
         monitors = get_monitors()
@@ -141,11 +154,10 @@ def main():
         s = sun(location.observer, date=current_time.date(), tzinfo=tz)
         sunrise, sunset = s["sunrise"], s["sunset"]
 
-        brightness = calculate_brightness(sunrise, sunset, current_time)
+        brightness = calculate_brightness(sunrise, sunset, current_time, brightness_min, brightness_max)
         set_monitor_brightness(brightness, monitors)
 
         log(f"Current time: {current_time}, Sunrise: {sunrise}, Sunset: {sunset}, Brightness: {brightness}")
-        log(f"Coordinates: {latitude}, {longitude}")
 
         time.sleep(UPDATE_INTERVAL)
 
