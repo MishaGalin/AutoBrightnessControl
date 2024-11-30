@@ -17,11 +17,13 @@ BRIGHTNESS_MAX = 70  # Maximum brightness (%)
 UPDATE_INTERVAL = 60  # Update interval in seconds
 
 COORDINATES_FILE = "coordinates.json"  # File to store coordinates
-MESSAGES = False  # Set to True to enable print messages
+LOG_FILE = "brightness_control.txt"
+LOG = False  # Set to True to enable logging
 
 def log(message):
-    if MESSAGES:
-        print(message)
+    if LOG:
+        with open(LOG_FILE, "a") as file:
+            file.write(message + "\n")
 
 def save_coordinates_to_file(latitude, longitude):
     try:
