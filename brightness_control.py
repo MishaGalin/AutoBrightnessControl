@@ -64,18 +64,18 @@ def get_coordinates():
     # Try to fetch coordinates online
     try:
         latitude, longitude = get_coordinates_by_ip()
-        if latitude is not None and longitude is not None:
+        if (latitude is not None) and (longitude is not None):
             save_coordinates_to_file(latitude, longitude)
     except Exception as e:
         log(f"Error fetching coordinates online: {e}")
 
     # If coordinates are still None, try to load them from local file
-    if latitude is None or longitude is None:
+    if (latitude is None) or (longitude is None):
         log("Attempting to load coordinates from local file...")
         latitude, longitude = load_coordinates_from_file()
 
-    # If coordinates are still None, use default coordinates
-    if latitude is None or longitude is None:
+    # If coordinates are still None, exit
+    if (latitude is None) or (longitude is None):
         log("Error: Unable to determine coordinates. Exiting.")
         ctypes.windll.user32.MessageBoxW(0, "Error: Unable to determine coordinates. Exiting\nBut you can set them manually in the code :)", "Error", 0)
         sys.exit(1)
@@ -127,6 +127,8 @@ def main():
     parser = argparse.ArgumentParser(description="Brightness control based on sunrise and sunset.")
     parser.add_argument("--min", type=int, default=default_min_brightness, help=f"Minimum brightness (default: {default_min_brightness})")
     parser.add_argument("--max", type=int, default=default_max_brightness, help=f"Maximum brightness (default: {default_max_brightness})")
+    parser.add_argument("--lat", type=float, default=None, help="Latitude")
+    parser.add_argument("--lng", type=float, default=None, help="Longitude")
     args = parser.parse_args()
 
     brightness_min = args.min
@@ -134,7 +136,11 @@ def main():
 
     log(f"Brightness range set: {brightness_min}% - {brightness_max}%")
 
-    latitude, longitude = get_coordinates()
+    if (args.lat is not None) and (args.lng is not None):
+        latitude, longitude = args.lat, args.lng
+    else:
+        latitude, longitude = get_coordinates()
+
     tz = get_timezone_from_coordinates(latitude, longitude)
     location = LocationInfo(timezone=tz.zone, latitude=latitude, longitude=longitude)
 
