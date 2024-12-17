@@ -1,6 +1,6 @@
-Usage of this app is super simple, all you have to do is to run the brightness_control.exe file (unless you want to change something via arguments). You don't need to have python interpreter or any python libraries installed.
+This app is very easy to use, all you have to do is to run brightness_control.exe (unless you want to change something via arguments). You don't need to have python interpreter or any python libraries installed.
 
-You can also create a task in Windows Task Manager to have this app autorun on startup with desired arguments using the file create_task.bat (run as administrator!!!).
+You can also create a task in Windows Task Manager to have this app autorun on startup with desired arguments using create_task.bat (run as administrator!!!).
 
 You can get your coordinates on this website: https://www.latlong.net/
 
