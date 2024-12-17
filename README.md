@@ -1,3 +1,7 @@
+Usage of this app is super simple, all you have to do is to run the brightness_control.exe file (unless you want to change something via arguments). You don't need to have python interpreter or any python libraries installed.
+
+You can also create a task in Windows Task Manager to have this app autorun on startup with desired arguments using the file create_task.bat (run as administrator!!!).
+
 You can get your coordinates on this website: https://www.latlong.net/
 
 Full list of arguments:
@@ -24,3 +28,5 @@ speed = 0.75:
 
 speed = 1.0:
 ![Figure_3png](https://github.com/user-attachments/assets/a74f5940-0927-4287-97be-d011ca277eae)
+
+This program has been tested and runs on Windows 10 and 11 only.
