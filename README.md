@@ -1,4 +1,4 @@
-You can get your precise coordinates on this website: https://www.latlong.net/
+You can get your coordinates on this website: https://www.latlong.net/
 
 Also, if you want this to run on startup, you can make a task in Task Scheduler in Windows
 
