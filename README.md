@@ -24,9 +24,3 @@ speed = 0.75:
 
 speed = 1.0:
 ![Figure_3png](https://github.com/user-attachments/assets/a74f5940-0927-4287-97be-d011ca277eae)
-
-Also, if you want this to run on startup, you can make a task in Task Scheduler in Windows
-
-![1](https://github.com/user-attachments/assets/6d5bf5cf-7db8-49fe-9679-0ef30b385437)
-
-![2](https://github.com/user-attachments/assets/1d1e1b49-c520-42ac-9c49-fa1122d5e9d6)
