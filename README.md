@@ -29,4 +29,4 @@ speed = 0.75:
 speed = 1.0:
 ![Figure_3png](https://github.com/user-attachments/assets/a74f5940-0927-4287-97be-d011ca277eae)
 
-This program has been tested and runs on Windows 10 and 11 only.
+This program has been tested on Windows 10 and 11 only.
