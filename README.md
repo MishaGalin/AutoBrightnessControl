@@ -18,7 +18,7 @@ Full list of arguments:
 
 --log - Enable logging (default: False)
 
---plot - Enable plot of brightness over day (default: False)
+--plot - Enable display of brightness graph (default: False)
 
 speed = 0.5:
 ![Figure_1](https://github.com/user-attachments/assets/c3da827e-1e55-49d7-bb40-860e07eec6a0)
