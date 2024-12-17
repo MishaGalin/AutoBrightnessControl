@@ -29,4 +29,6 @@ speed = 0.75:
 speed = 1.0:
 ![Figure_3png](https://github.com/user-attachments/assets/a74f5940-0927-4287-97be-d011ca277eae)
 
+I recommend use it with Auto Dark Mode application, which uses latitude and longitude coordinates too to change Windows theme to dark and light mode automatically. Particularly this application inspired me to create AutoBrightnessControl.
+
 This program has been tested on Windows 10 and 11 only.
