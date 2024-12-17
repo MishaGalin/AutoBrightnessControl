@@ -1,6 +1,7 @@
 You can get your coordinates on this website: https://www.latlong.net/
 
 Full list of arguments:
+
 --min - Minimum brightness (default: 20)
 
 --max - Maximum brightness (default: 70)
