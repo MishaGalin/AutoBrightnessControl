@@ -2,11 +2,17 @@ You can get your coordinates on this website: https://www.latlong.net/
 
 Full list of arguments:
 --min - Minimum brightness (default: 20)
+
 --max - Maximum brightness (default: 70)
+
 --speed - Lower values make the transition around sunset and sunrise faster. Recommended value is from 0.5 to 1.0 (default: 1.0)
+
 --lat - Latitude (default: automatic detection)
+
 --lng - Longitude (default: automatic detection)
+
 --log - Enable logging (default: False)
+
 --plot - Enable plot of brightness over day (default: False)
 
 speed = 0.5:
