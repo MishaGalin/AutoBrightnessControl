@@ -1,7 +1,7 @@
 @echo off
 
 :: Get arguments from the user
-set /p args=Enter arguments for brightness_control.exe:
+set /p args=Enter arguments for brightness_control.exe (skip to use default values):
 
 :: Get the current folder path
 set currentPath=%~dp0
