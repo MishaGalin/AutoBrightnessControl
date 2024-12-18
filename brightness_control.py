@@ -12,11 +12,11 @@ from astral.sun import sun
 from astral import LocationInfo
 from monitorcontrol import get_monitors
 from timezonefinder import TimezoneFinder
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 UPDATE_INTERVAL = 60  # Update interval in seconds
 COORDINATES_FILE = "coordinates.json"  # File to store coordinates
-LOG_FILE = "brightness_control.txt"
+LOG_FILE = "brightness_control_log.txt"
 
 def log(message):
     if LOG:
@@ -120,37 +120,37 @@ def set_monitor_brightness(brightness, monitors):
         except Exception as e:
                 log(f" Error setting brightness: {e}")
 
-def plot_brightness_over_day(time_zone, location, brightness_min, brightness_max, change_speed):
-    """
-    Строит график изменения яркости в течение дня.
-    """
-    times = []
-    brightness_values = []
-
-    current_time = datetime.now(time_zone)
-
-    s = sun(location.observer, date=current_time.date(), tzinfo=time_zone)
-    sunrise, sunset = s["sunrise"], s["sunset"]
-
-    # Разбиваем день на интервалы для отображения
-    step = 1  # Разбиваем день на интервалы по минутам
-    current_time = sunrise
-
-    while current_time <= sunrise + timedelta(days=1):
-        brightness = calculate_brightness(sunrise, sunset, current_time, brightness_min, brightness_max, change_speed)
-        times.append(current_time)
-        brightness_values.append(brightness)
-        current_time += timedelta(minutes=step)
-
-    # Отображаем график
-    plt.figure(figsize=(10, 5))
-    plt.plot(times, brightness_values, label="Brightness", color='blue')
-    plt.xlabel("Time")
-    plt.ylabel("Brightness (%)")
-    plt.xticks(rotation=45)
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show()
+#def plot_brightness_over_day(time_zone, location, brightness_min, brightness_max, change_speed):
+#    """
+#    Строит график изменения яркости в течение дня.
+#    """
+#    times = []
+#    brightness_values = []
+#
+#    current_time = datetime.now(time_zone)
+#
+#    s = sun(location.observer, date=current_time.date(), tzinfo=time_zone)
+#    sunrise, sunset = s["sunrise"], s["sunset"]
+#
+#    # Разбиваем день на интервалы для отображения
+#    step = 1  # Разбиваем день на интервалы по минутам
+#    current_time = sunrise
+#
+#    while current_time <= sunrise + timedelta(days=1):
+#        brightness = calculate_brightness(sunrise, sunset, current_time, brightness_min, brightness_max, change_speed)
+#        times.append(current_time)
+#        brightness_values.append(brightness)
+#        current_time += timedelta(minutes=step)
+#
+#    # Отображаем график
+#    plt.figure(figsize=(10, 5))
+#    plt.plot(times, brightness_values, label="Brightness", color='blue')
+#    plt.xlabel("Time")
+#    plt.ylabel("Brightness (%)")
+#    plt.xticks(rotation=45)
+#    plt.grid(True)
+#    plt.tight_layout()
+#    plt.show()
 
 def main():
     default_min_brightness = 20
@@ -163,7 +163,7 @@ def main():
     parser.add_argument("--lat",    type=float, default=None,                   help="Latitude (default: automatic detection)")
     parser.add_argument("--lng",    type=float, default=None,                   help="Longitude (default: automatic detection)")
     parser.add_argument("--log",    type=bool,  default=False,                  help="Enable logging (default: False)")
-    parser.add_argument("--plot",   type=bool,  default=False,                  help="Enable plot of brightness over day (default: False)")
+    #parser.add_argument("--plot",   type=bool,  default=False,                  help="Enable plot of brightness over day (default: False)")
     args = parser.parse_args()
 
     brightness_min = args.min
@@ -173,7 +173,7 @@ def main():
     global LOG
     LOG = args.log
 
-    plot_flag = args.plot
+    #plot_flag = args.plot
 
     if (args.lat is not None) and (args.lng is not None):
         latitude, longitude = args.lat, args.lng
@@ -194,8 +194,10 @@ def main():
         log(f"Error getting monitors: {e}")
         return
 
-    if plot_flag:
-        plot_brightness_over_day(time_zone, location, brightness_min, brightness_max, change_speed)
+    #if plot_flag:
+    #    plot_brightness_over_day(time_zone, location, brightness_min, brightness_max, change_speed)
+
+    last_brightness_value = None
 
     while True:
         current_time = datetime.now(time_zone)
@@ -204,7 +206,9 @@ def main():
         sunrise, sunset = s["sunrise"], s["sunset"]
 
         brightness = calculate_brightness(sunrise, sunset, current_time, brightness_min, brightness_max, change_speed)
-        set_monitor_brightness(brightness, monitors)
+        if brightness != last_brightness_value:
+            set_monitor_brightness(brightness, monitors)
+            last_brightness_value = brightness
 
         log(f"Current time: {format(current_time, '%H:%M:%S')}, Sunrise: {format(sunrise, '%H:%M:%S') }, Sunset: {format(sunset, '%H:%M:%S')}")
         log(f"Brightness: {brightness}%\n")
