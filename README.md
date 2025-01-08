@@ -21,13 +21,13 @@ Full list of arguments:
 --log - Enable logging (default: False)
 
 speed = 0.5:
-![Figure_1](https://github.com/user-attachments/assets/c3da827e-1e55-49d7-bb40-860e07eec6a0)
+![0 5](https://github.com/user-attachments/assets/d5e40796-5f55-4bdf-9441-119b854e05ff)
 
 speed = 0.75:
-![Figure_2](https://github.com/user-attachments/assets/302d8ff7-279f-4a75-92ae-141448b50aa6)
+![0 75](https://github.com/user-attachments/assets/57bc00d4-cccc-461d-beef-124dccc6212a)
 
 speed = 1.0:
-![Figure_3png](https://github.com/user-attachments/assets/a74f5940-0927-4287-97be-d011ca277eae)
+![1 0](https://github.com/user-attachments/assets/41ed7861-4ef0-436b-bdfa-e57a4e782130)
 
 I recommend use it with Auto Dark Mode application, which uses latitude and longitude coordinates too to change Windows theme to dark and light mode automatically. Particularly this application inspired me to create AutoBrightnessControl.
 
