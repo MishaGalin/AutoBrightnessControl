@@ -323,14 +323,12 @@ async def brightness_adjustment(brightness_min: int,
 
     last_value_adjusted_brightness = 0
     last_value_pixels = None
-    screenshot = capture_agent.screenshot() # not optimal but
-    #max_by_subpixels = np.zeros([screenshot.shape[0] // divider - 2, screenshot.shape[1] // divider - 2])
-    divider_x = screenshot.shape[1] // 80
-    divider_y = screenshot.shape[0] // 80
 
     while True:
         start_time = time()
         screenshot = capture_agent.screenshot()
+        divider_y = screenshot.shape[0] // 80
+        divider_x = screenshot.shape[1] // 80
 #        if cp.cuda.is_available():
 #            screenshot_gpu = cp.asarray(screenshot)
 #
@@ -364,12 +362,12 @@ async def brightness_adjustment(brightness_min: int,
             interval = 1.0
             last_value_pixels = pixels
 
+        max_by_subpixels = np.empty([pixels.shape[0], pixels.shape[1]])
+        for i in range(max_by_subpixels.shape[0]):
+            for j in range(max_by_subpixels.shape[1]):
+                max_by_subpixels[i][j] = max(pixels[i][j])
 
-        #for i in range(max_by_subpixels.shape[0]):
-        #    for j in range(max_by_subpixels.shape[1]):
-        #        max_by_subpixels[i][j] = np.max(pixels[i][j])
-
-        brightness_modifier = (np.mean(pixels) / 255.0) + 0.5  # 0 - 255 range to 0.5 - 1.5
+        brightness_modifier = np.mean(max_by_subpixels) / 255.0 + 0.5  # 0 - 255 range to 0.5 - 1.5
 
         async with (lock):
             global BASE_BRIGHTNESS
@@ -390,8 +388,8 @@ async def brightness_adjustment(brightness_min: int,
 
         end_time = time()
         elapsed_time = end_time - start_time
-        #print(f"Elapsed time: {elapsed_time:.3f} seconds")
-        #print(f"Sleep time: {np.max((0, interval - elapsed_time)):.3f} seconds\n")
+        print(f"Elapsed time: {elapsed_time:.3f} seconds")
+        print(f"Sleep time: {np.max((0, interval - elapsed_time)):.3f} seconds\n")
 
         await asyncio.sleep(np.max((0, interval - elapsed_time)))
 
