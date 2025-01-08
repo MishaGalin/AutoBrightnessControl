@@ -357,6 +357,7 @@ async def brightness_adjustment(brightness_min: int,
             global BASE_BRIGHTNESS
             adjusted_brightness = round(BASE_BRIGHTNESS * brightness_modifier)
 
+
         adjusted_brightness = max(brightness_min, min(brightness_max, adjusted_brightness))
 
         if adjusted_brightness != last_value_adjusted_brightness:
