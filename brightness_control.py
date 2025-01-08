@@ -1,7 +1,5 @@
 from os import path
 from json import dump, load
-
-import d3dshot
 from requests import get, RequestException
 from ctypes import Structure, windll, c_uint, sizeof, byref
 from argparse import ArgumentParser
@@ -13,7 +11,7 @@ from pytz import timezone
 from astral.sun import sun
 from astral import LocationInfo
 from timezonefinder import TimezoneFinder
-from d3dshot import create
+import d3dshot
 import numpy as np
 import asyncio
 import refreshrate
@@ -440,7 +438,7 @@ async def main():
     #if plot_flag:
     #await plot_brightness_over_day(time_zone, location, brightness_min, brightness_max, change_speed)
 
-    capture_agent = create(capture_output="numpy")
+    capture_agent = d3dshot.create(capture_output="numpy")
 
     task1 = asyncio.create_task(brightness_control(brightness_min, brightness_max, change_speed, time_zone, location))
     task2 = asyncio.create_task(brightness_adjustment(brightness_min, brightness_max, monitors, capture_agent))
