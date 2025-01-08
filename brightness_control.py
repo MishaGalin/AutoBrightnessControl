@@ -357,24 +357,25 @@ async def brightness_adjustment(brightness_min: int,
             global BASE_BRIGHTNESS
             adjusted_brightness = round(BASE_BRIGHTNESS * brightness_modifier)
 
-
         adjusted_brightness = max(brightness_min, min(brightness_max, adjusted_brightness))
 
         if adjusted_brightness != last_value_adjusted_brightness:
-            if abs(adjusted_brightness - last_value_adjusted_brightness) > 5:
+            if abs(adjusted_brightness - last_value_adjusted_brightness) >= 5:
                 set_monitor_brightness_smoothly(adjusted_brightness, monitors, interval)
             else:
                 set_monitor_brightness(adjusted_brightness, monitors)
 
-        last_value_adjusted_brightness = adjusted_brightness
+            last_value_adjusted_brightness = adjusted_brightness
+
+
 
         log(f"Current base brightness: {BASE_BRIGHTNESS}%")
         log(f"Adapted brightness: {adjusted_brightness}%\n")
 
         end_time = time()
         elapsed_time = end_time - start_time
-        print(f"Elapsed time: {elapsed_time:.3f} seconds")
-        print(f"Sleep time: {np.max((0, interval - elapsed_time)):.3f} seconds\n")
+        #print(f"Elapsed time: {elapsed_time:.3f} seconds")
+        #print(f"Sleep time: {np.max((0, interval - elapsed_time)):.3f} seconds\n")
 
         await asyncio.sleep(np.max((0, interval - elapsed_time)))
 
