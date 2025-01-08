@@ -11,8 +11,7 @@ from pytz import timezone
 from astral.sun import sun
 from astral import LocationInfo
 from timezonefinder import TimezoneFinder
-from d3dshot import create
-#import matplotlib.pyplot as plt
+import d3dshot
 import numpy as np
 import asyncio
 import refreshrate
@@ -249,9 +248,8 @@ def set_monitor_brightness_smoothly(brightness: int,
         sbc.set_brightness(end_luminance, display=monitor)
 
 #async def plot_brightness_over_day(time_zone, location, brightness_min, brightness_max, change_speed):
-#    """
-#    Строит график изменения яркости в течение дня.
-#    """
+#    import matplotlib.pyplot as plt
+#
 #    times = []
 #    brightness_values = []
 #
@@ -321,11 +319,11 @@ async def brightness_control(brightness_min: int,
 async def brightness_adjustment(brightness_min: int,
                                 brightness_max: int,
                                 monitors: list,
-                                capture_agent) -> None:
+                                capture_agent: d3dshot.D3DShot) -> None:
 
     divider = 16
     last_value_adjusted_brightness = 0
-    last_value_max_by_subpixels = None
+    last_value_pixels = None
 
     while True:
         start_time = time()
@@ -347,11 +345,11 @@ async def brightness_adjustment(brightness_min: int,
 
 #        else:
 
-        max_by_subpixels = screenshot[  divider : -divider : divider,
-                                        divider : -divider : divider] # take every pixel with a step of 'interval' except the edges
+        pixels = screenshot[  divider : -divider : divider,
+                                        divider : -divider : divider] # take every pixel with a step of 'divider' except the edges
 
         # Check if the PC is idle and picture is the same
-        if (np.all(max_by_subpixels == last_value_max_by_subpixels)) and get_idle_duration() > 5:
+        if (np.all(pixels == last_value_pixels)) and get_idle_duration() > 5:
             #print("PC is idle")
             end_time = time()
             elapsed_time = end_time - start_time
@@ -361,19 +359,12 @@ async def brightness_adjustment(brightness_min: int,
         else:
             #print("PC is not idle")
             interval = 1.0
-            last_value_max_by_subpixels = max_by_subpixels
+            last_value_pixels = pixels
 
-
-        rows = max_by_subpixels.shape[0]
-        cols = max_by_subpixels.shape[1]
-        x_indices = np.arange(rows) * divider
-        y_indices = np.arange(cols) * divider
-
-        # Находим максимум по указанным правилам
-        max_by_subpixels = np.maximum(
-            screenshot[x_indices[:, None], y_indices],
-            max_by_subpixels
-        )
+        max_by_subpixels = np.zeros([pixels.shape[0], pixels.shape[1]])
+        for i in range(max_by_subpixels.shape[0]):
+            for j in range(max_by_subpixels.shape[1]):
+                max_by_subpixels[i][j] = np.max(pixels[i][j])
 
         mean_of_max_by_subpixels = np.mean(max_by_subpixels)
 
@@ -447,7 +438,7 @@ async def main():
     #if plot_flag:
     #await plot_brightness_over_day(time_zone, location, brightness_min, brightness_max, change_speed)
 
-    capture_agent = create(capture_output="numpy")
+    capture_agent = d3dshot.create(capture_output="numpy")
 
     task1 = asyncio.create_task(brightness_control(brightness_min, brightness_max, change_speed, time_zone, location))
     task2 = asyncio.create_task(brightness_adjustment(brightness_min, brightness_max, monitors, capture_agent))
