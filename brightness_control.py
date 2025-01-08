@@ -321,9 +321,12 @@ async def brightness_adjustment(brightness_min: int,
                                 monitors: list,
                                 capture_agent: d3dshot.D3DShot) -> None:
 
-    divider = 16
     last_value_adjusted_brightness = 0
     last_value_pixels = None
+    screenshot = capture_agent.screenshot() # not optimal but
+    #max_by_subpixels = np.zeros([screenshot.shape[0] // divider - 2, screenshot.shape[1] // divider - 2])
+    divider_x = screenshot.shape[1] // 80
+    divider_y = screenshot.shape[0] // 80
 
     while True:
         start_time = time()
@@ -345,8 +348,8 @@ async def brightness_adjustment(brightness_min: int,
 
 #        else:
 
-        pixels = screenshot[  divider : -divider : divider,
-                                        divider : -divider : divider] # take every pixel with a step of 'divider' except the edges
+        pixels = screenshot[    divider_y : -divider_y : divider_y,
+                                divider_x : -divider_x : divider_x] # take every pixel with a step of 'divider' except the edges
 
         # Check if the PC is idle and picture is the same
         if (np.all(pixels == last_value_pixels)) and get_idle_duration() > 5:
@@ -361,14 +364,12 @@ async def brightness_adjustment(brightness_min: int,
             interval = 1.0
             last_value_pixels = pixels
 
-        max_by_subpixels = np.zeros([pixels.shape[0], pixels.shape[1]])
-        for i in range(max_by_subpixels.shape[0]):
-            for j in range(max_by_subpixels.shape[1]):
-                max_by_subpixels[i][j] = np.max(pixels[i][j])
 
-        mean_of_max_by_subpixels = np.mean(max_by_subpixels)
+        #for i in range(max_by_subpixels.shape[0]):
+        #    for j in range(max_by_subpixels.shape[1]):
+        #        max_by_subpixels[i][j] = np.max(pixels[i][j])
 
-        brightness_modifier = (mean_of_max_by_subpixels / 255.0) + 0.5  # 0 - 255 range to 0.5 - 1.5
+        brightness_modifier = (np.mean(pixels) / 255.0) + 0.5  # 0 - 255 range to 0.5 - 1.5
 
         async with (lock):
             global BASE_BRIGHTNESS
@@ -376,15 +377,16 @@ async def brightness_adjustment(brightness_min: int,
 
         adjusted_brightness = max(brightness_min, min(brightness_max, adjusted_brightness))
 
-        if abs(adjusted_brightness - last_value_adjusted_brightness) > 5:
-            set_monitor_brightness_smoothly(adjusted_brightness, monitors, interval)
-        else:
-            set_monitor_brightness(adjusted_brightness, monitors)
+        if adjusted_brightness != last_value_adjusted_brightness:
+            if abs(adjusted_brightness - last_value_adjusted_brightness) > 5:
+                set_monitor_brightness_smoothly(adjusted_brightness, monitors, interval)
+            else:
+                set_monitor_brightness(adjusted_brightness, monitors)
 
         last_value_adjusted_brightness = adjusted_brightness
 
-        #print(f"Current base brightness: {BASE_BRIGHTNESS}%")
-        #print(f"Adapted brightness: {adjusted_brightness}%\n")
+        log(f"Current base brightness: {BASE_BRIGHTNESS}%")
+        log(f"Adapted brightness: {adjusted_brightness}%\n")
 
         end_time = time()
         elapsed_time = end_time - start_time
