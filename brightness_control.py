@@ -329,22 +329,6 @@ async def brightness_adjustment(brightness_min: int,
         screenshot = capture_agent.screenshot()
         divider_y = screenshot.shape[0] // 80
         divider_x = screenshot.shape[1] // 80
-#        if cp.cuda.is_available():
-#            screenshot_gpu = cp.asarray(screenshot)
-#
-#            # Выбираем каждый второй пиксель по обеим осям (x и y)
-#            screenshot_gpu_sampled = screenshot_gpu[::2, ::2]  # срезаем изображение с шагом 2
-#
-#            # Находим максимум для каждого пикселя (на GPU)
-#            max_by_subpixels_gpu = cp.amax(screenshot_gpu_sampled, axis=-1)
-#
-#            # Переводим результат обратно на CPU (если нужно)
-#            max_by_subpixels = cp.asnumpy(max_by_subpixels_gpu)
-#
-#            # Вычисляем среднее значение
-#            mean_of_max_by_subpixels = np.mean(max_by_subpixels)
-
-#        else:
 
         pixels = screenshot[    divider_y : -divider_y : divider_y,
                                 divider_x : -divider_x : divider_x] # take every pixel with a step of 'divider' except the edges
