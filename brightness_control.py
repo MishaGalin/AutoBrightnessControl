@@ -20,6 +20,7 @@ import screen_brightness_control as sbc
 UPDATE_INTERVAL = 60  # Update interval in seconds
 COORDINATES_FILE = "coordinates.json"  # File to store coordinates
 LOG_FILE = "brightness_control_log.txt"
+LOG = False
 
 lock = asyncio.Lock()
 
