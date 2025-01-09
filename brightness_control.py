@@ -30,6 +30,8 @@ def log(message: str) -> None:
         with open(LOG_FILE, "a") as file:
             file.write(message + "\n")
 
+
+# noinspection PyTypeChecker
 def save_coordinates_to_file(latitude: float,
                              longitude: float) -> None:
     try:
@@ -40,7 +42,7 @@ def save_coordinates_to_file(latitude: float,
     except Exception as e:
         log(f"Error saving coordinates: {e}")
 
-def load_coordinates_from_file() -> tuple[float, float]:
+def load_coordinates_from_file() -> tuple[float | None, float | None]:
     if path.exists(COORDINATES_FILE):
         try:
             with open(COORDINATES_FILE, "r") as file:
@@ -51,7 +53,7 @@ def load_coordinates_from_file() -> tuple[float, float]:
             log(f"Error loading coordinates: {e}")
     return None, None
 
-def get_coordinates_by_ip() -> tuple[float, float]:
+def get_coordinates_by_ip() -> tuple[float | None, float | None]:
     try:
         response = get("http://ipinfo.io/json", timeout=10)
         response.raise_for_status()  # Raise an exception if the request was unsuccessful
@@ -186,7 +188,7 @@ def set_monitor_brightness(brightness: int,
 #        print(f"Fps: {(1 / elapsed_time_animation_step):.2f}")
 #        print(f"Elapsed time animation step: {elapsed_time_animation_step:.3f}")
 #        print(f"Sleeping for {frame_duration - elapsed_time_animation_step:.3f} seconds...")
-#        sleep(np.max((0, frame_duration - elapsed_time_animation_step)))
+#        sleep(max((0, frame_duration - elapsed_time_animation_step)))
 #
 #        # Обновляем время для следующего шага
 #        start_time = time()
@@ -207,7 +209,7 @@ def set_monitor_brightness_smoothly(brightness: int,
                                     animation_duration: float) -> None:
 
     def ease_out_sine(x: float) -> float:
-        return np.sin(x * pi / 2.0)
+        return sin(x * pi / 2.0)
 
     start_time = time()
     refresh_rate = min(120, refreshrate.get())
@@ -224,7 +226,7 @@ def set_monitor_brightness_smoothly(brightness: int,
     # Set the brightness of each monitor smoothly
     while True:
         start_time_animation_step = time()
-        progress = (time() - start_time) / animation_duration
+        progress = (start_time_animation_step - start_time) / animation_duration
 
         if progress >= 1.0:
             break
@@ -241,7 +243,7 @@ def set_monitor_brightness_smoothly(brightness: int,
         #print(f"Fps: {(1 / elapsed_time_animation_step):.2f}")
         #print(f"Elapsed time animation step: {elapsed_time_animation_step:.3f}")
         #print(f"Sleeping for {frame_duration - elapsed_time_animation_step:.3f} seconds...")
-        sleep(np.max((0, frame_duration - elapsed_time_animation_step)))
+        sleep(max((0, frame_duration - elapsed_time_animation_step)))
 
     # Set the final brightness of each monitor
     for monitor in monitors:
@@ -314,7 +316,7 @@ async def brightness_control(brightness_min: int,
 
         end_time = time()
         elapsed_time = end_time - start_time
-        await asyncio.sleep(np.max((0, UPDATE_INTERVAL - elapsed_time)))
+        await asyncio.sleep(max((0, UPDATE_INTERVAL - elapsed_time)))
 
 async def brightness_adjustment(brightness_min: int,
                                 brightness_max: int,
@@ -339,7 +341,7 @@ async def brightness_adjustment(brightness_min: int,
             end_time = time()
             elapsed_time = end_time - start_time
             interval = 2.0
-            await asyncio.sleep(np.max((0, interval - elapsed_time)))
+            await asyncio.sleep(max((0, interval - elapsed_time)))
             continue
         else:
             #print("PC is not idle")
@@ -375,9 +377,9 @@ async def brightness_adjustment(brightness_min: int,
         end_time = time()
         elapsed_time = end_time - start_time
         #print(f"Elapsed time: {elapsed_time:.3f} seconds")
-        #print(f"Sleep time: {np.max((0, interval - elapsed_time)):.3f} seconds\n")
+        #print(f"Sleep time: {max((0, interval - elapsed_time)):.3f} seconds\n")
 
-        await asyncio.sleep(np.max((0, interval - elapsed_time)))
+        await asyncio.sleep(max((0, interval - elapsed_time)))
 
 
 async def main():
