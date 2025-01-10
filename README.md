@@ -1,6 +1,11 @@
-This app is very easy to use, all you have to do is to run brightness_control.exe (unless you want to change something with arguments). You don't need to have python interpreter or any python libraries installed.
+Latest version (v1.3.5): https://drive.google.com/file/d/1Co-cQVyX_yl4m1vCXKOYub4ldy7peZDC/view?usp=sharing
 
-You can also create a task in Windows Task Manager to have this app autorun on startup with desired arguments using create_task.bat (run as administrator!!!).
+The main change in version 1.3.x was adaptive brightness change depending on the content on the screen. I understand that not everyone needs such a function, and in this case I recommend downloading version 1.2.x.
+Since the .exe file size in the latest update exceeds the GitHub limit of 100 MB, I uploaded it to Google Drive.
+
+This app is actually very easy to use, all you have to do is to run brightness_control.exe (unless you want to change something with arguments). You don't need to have python interpreter or any python libraries installed.
+
+You can also create a task in Windows Task Manager to have this app autorun on startup with desired arguments using create_task.bat (run as administrator).
 
 Latitude and longitude are determined by your IP address, not GPS or anything else, so it would be determined incorrectly if you are using a VPN when the app launches.
 
@@ -31,4 +36,4 @@ speed = 1.0:
 
 I recommend use it with Auto Dark Mode application, which uses latitude and longitude coordinates too to change Windows theme to dark and light mode automatically. Particularly this application inspired me to create AutoBrightnessControl.
 
-This program has been tested on Windows 10 and 11 only.
+This program has been tested on Windows 10 and 11 only with a single monitor setup. But it should work properly on multi-monitor setups as well.
