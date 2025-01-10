@@ -1,7 +1,7 @@
 from os import path
 from json import dump, load
 from requests import get, RequestException
-from ctypes import Structure, windll, c_uint, sizeof, byref
+from ctypes import windll
 from argparse import ArgumentParser
 from time import sleep, time
 from sys import exit
@@ -11,7 +11,7 @@ from pytz import timezone
 from astral.sun import sun
 from astral import LocationInfo
 from timezonefinder import TimezoneFinder
-import d3dshot
+import dxcam
 import numpy as np
 import asyncio
 import refreshrate
@@ -24,7 +24,7 @@ LOG = False
 
 lock = asyncio.Lock()
 
-BASE_BRIGHTNESS = 50
+BASE_BRIGHTNESS = 50.0
 
 def log(message: str) -> None:
     if LOG:
@@ -90,7 +90,7 @@ def get_coordinates() -> tuple[float, float]:
     # If coordinates are still None, exit
     if (latitude is None) or (longitude is None):
         log("Error: Unable to determine coordinates. Exiting.")
-        windll.user32.MessageBoxW(0, "Error: Unable to determine coordinates. Exiting\nBut you can set them manually in the code :)", "Error", 0)
+        windll.user32.MessageBoxW(0, "Error: Unable to determine coordinates. Exiting\nBut you can set them manually using arguments --lat and --lng", "Error", 0)
         exit(1)
 
     return latitude, longitude
@@ -108,11 +108,12 @@ def calculate_brightness(sunrise: datetime,
                          current_time: datetime,
                          brightness_min: int,
                          brightness_max: int,
-                         change_speed: float) -> int:
+                         change_speed: float) -> float:
     """
     Calculates brightness based on current time and sunrise/sunset times.
     Brightness is maximum at midday and minimum at midnight.
     """
+
     day_duration = (sunset - sunrise).total_seconds()
     night_duration = (24 * 60 * 60) - day_duration
     brightness_range = brightness_max - brightness_min
@@ -122,133 +123,46 @@ def calculate_brightness(sunrise: datetime,
 
     if sunrise <= current_time <= sunset:  # Daytime phase
         progress = (current_time - sunrise).total_seconds() / day_duration
-        brightness = round(brightness_min + brightness_range * (sin(pi * progress) ** change_speed_day + 1) / 2)
+        brightness = brightness_min + brightness_range * (sin(pi * progress) ** change_speed_day + 1) / 2
     else:  # Nighttime phase
         if current_time > sunset:
             progress = (current_time - sunset).total_seconds() / night_duration
         else:
             progress = (current_time - sunset + timedelta(days=1)).total_seconds() / night_duration
-        brightness = round(brightness_max - brightness_range * (sin(pi * progress) ** change_speed_night + 1) / 2)
+        brightness = brightness_max - brightness_range * (sin(pi * progress) ** change_speed_night + 1) / 2
 
     return brightness
 
-def set_monitor_brightness(brightness: int,
-                           monitors: list) -> None:
-    for monitor in monitors:
-        sbc.set_brightness(brightness, display=monitor)
-
-#def set_monitor_brightness_smoothly(brightness: int,
-#                                    monitors: list,
-#                                    animation_duration: float) -> None:
-#    def ease_out_sine(x: float) -> float:
-#        return sin(x * pi / 2.0)
-#
-#    refresh_rate = min(120, refreshrate.get())
-#    frame_duration = 1.0 / refresh_rate
-#
-#    start_time = time()
-#    start_luminance = {}
-#    end_luminance = brightness
-#
-#    # Получаем начальную яркость каждого монитора
-#    for monitor in monitors:
-#        try:
-#            with monitor:
-#                start_luminance[monitor] = monitor.get_luminance()
-#        except Exception as e:
-#            log(f" Error getting brightness: {e}")
-#
-#    # Параллельное выполнение анимации для каждого монитора
-#    def update_monitor_brightness(monitor, start_luminance, progress):
-#        with monitor:
-#            current_luminance = round(ease_out_sine(progress) * (end_luminance - start_luminance) + start_luminance)
-#            monitor.set_luminance(current_luminance)
-#
-#    # Основной цикл анимации
-#    while True:
-#        start_time_animation_step = time()
-#        progress = (time() - start_time) / animation_duration
-#
-#        if progress >= 1.0:
-#            break
-#
-#        # Параллельно обновляем яркость каждого монитора
-#        threads = []
-#        for monitor in monitors:
-#            thread = threading.Thread(target=update_monitor_brightness, args=(monitor, start_luminance[monitor], progress))
-#            threads.append(thread)
-#            thread.start()
-#
-#        # Ждем завершения всех потоков
-#        for thread in threads:
-#            thread.join()
-#
-#        # Ограничиваем частоту кадров
-#        end_time_animation_step = time()
-#        elapsed_time_animation_step = end_time_animation_step - start_time_animation_step
-#        print(f"Fps: {(1 / elapsed_time_animation_step):.2f}")
-#        print(f"Elapsed time animation step: {elapsed_time_animation_step:.3f}")
-#        print(f"Sleeping for {frame_duration - elapsed_time_animation_step:.3f} seconds...")
-#        sleep(max((0, frame_duration - elapsed_time_animation_step)))
-#
-#        # Обновляем время для следующего шага
-#        start_time = time()
-#
-#    # Финальная установка яркости
-#    for monitor in monitors:
-#        try:
-#            with monitor:
-#                if hasattr(monitor, 'set_luminance'):
-#                    monitor.set_luminance(end_luminance)
-#                else:
-#                    log(f"The {monitor} monitor does not support brightness control.")
-#        except Exception as e:
-#                log(f" Error setting brightness: {e}")
-
-def set_monitor_brightness_smoothly(brightness: int,
-                                    monitors: list,
+def set_monitor_brightness_smoothly(end_brightness: int,
                                     animation_duration: float) -> None:
 
     def ease_out_sine(x: float) -> float:
         return sin(x * pi / 2.0)
 
+    frame_duration = 1.0 / refreshrate.get()
+    start_brightness = sbc.get_brightness(display=0)[0]
+
     start_time = time()
-    refresh_rate = min(120, refreshrate.get())
-    frame_duration = 1.0 / refresh_rate
-
-    start_luminance = {}
-    current_luminance = None
-    end_luminance = brightness
-
-    # Get the initial brightness of each monitor
-    for monitor in monitors:
-        start_luminance[monitor] = sbc.get_brightness(display=monitor)[0]
+    sleep(frame_duration)
 
     # Set the brightness of each monitor smoothly
     while True:
         start_time_animation_step = time()
         progress = (start_time_animation_step - start_time) / animation_duration
+        current_brightness = round(start_brightness + ease_out_sine(progress) * (end_brightness - start_brightness))
 
-        if progress >= 1.0:
+        if progress >= 1.0 or current_brightness == end_brightness:
+            sbc.set_brightness(end_brightness)
             break
 
-        for monitor in monitors:
-            current_luminance = round(ease_out_sine(progress) * (end_luminance - start_luminance[monitor]) + start_luminance[monitor])
-            sbc.set_brightness(current_luminance, display=monitor)
-
-        if current_luminance == end_luminance:
-            break
+        sbc.set_brightness(current_brightness)
 
         end_time_animation_step = time()
         elapsed_time_animation_step = end_time_animation_step - start_time_animation_step
-        #print(f"Fps: {(1 / elapsed_time_animation_step):.2f}")
+        #print(f"Fps: {(1.0 / elapsed_time_animation_step):.2f}\n")
         #print(f"Elapsed time animation step: {elapsed_time_animation_step:.3f}")
         #print(f"Sleeping for {frame_duration - elapsed_time_animation_step:.3f} seconds...")
-        sleep(max((0, frame_duration - elapsed_time_animation_step)))
-
-    # Set the final brightness of each monitor
-    for monitor in monitors:
-        sbc.set_brightness(end_luminance, display=monitor)
+        sleep(max(0.0, frame_duration - elapsed_time_animation_step))
 
 #async def plot_brightness_over_day(time_zone, location, brightness_min, brightness_max, change_speed):
 #    import matplotlib.pyplot as plt
@@ -281,20 +195,6 @@ def set_monitor_brightness_smoothly(brightness: int,
 #    plt.tight_layout()
 #    plt.show()
 
-def get_idle_duration():
-
-    class LastInputInfo(Structure):
-        _fields_ = [
-            ('cbSize', c_uint),
-            ('dwTime', c_uint),
-        ]
-
-    last_input_info = LastInputInfo()
-    last_input_info.cbSize = sizeof(last_input_info)
-    windll.user32.GetLastInputInfo(byref(last_input_info))
-    millis = windll.kernel32.GetTickCount() - last_input_info.dwTime
-    return millis / 1000.0
-
 async def brightness_control(brightness_min: int,
                              brightness_max: int,
                              change_speed: float,
@@ -317,75 +217,82 @@ async def brightness_control(brightness_min: int,
 
         end_time = time()
         elapsed_time = end_time - start_time
-        await asyncio.sleep(max((0, UPDATE_INTERVAL - elapsed_time)))
+        await asyncio.sleep(max(0.0, UPDATE_INTERVAL - elapsed_time))
 
 async def brightness_adjustment(brightness_min: int,
-                                brightness_max: int,
-                                monitors: list,
-                                capture_agent: d3dshot.D3DShot) -> None:
+                                brightness_max: int) -> None:
 
-    last_value_adjusted_brightness = 0
+    interval = 1.0
+    camera = dxcam.create()
+    last_value_adjusted_brightness = -999
     last_value_pixels = None
+    brightness_addition_range = (brightness_max - brightness_min) / 2
 
     while True:
+        #print(f"idle duration: {get_idle_duration()}")
         start_time = time()
-        screenshot = capture_agent.screenshot()
+        screenshot = camera.grab()
+
+        if screenshot is None:
+            #print("No screenshot")
+            end_time = time()
+            elapsed_time = end_time - start_time
+            await asyncio.sleep(max(0.0, interval - elapsed_time))
+            continue
+
         divider_y = screenshot.shape[0] // 80
         divider_x = screenshot.shape[1] // 80
 
         pixels = screenshot[    divider_y : -divider_y : divider_y,
                                 divider_x : -divider_x : divider_x] # take every pixel with a step of 'divider' except the edges
 
-        # Check if the PC is idle and picture is the same
-        if (np.all(pixels == last_value_pixels)) and get_idle_duration() > 5:
-            #print("PC is idle")
+        if np.all(pixels == last_value_pixels):
+            #print("Picture is the same")
             end_time = time()
             elapsed_time = end_time - start_time
-            interval = 2.0
-            await asyncio.sleep(max((0, interval - elapsed_time)))
+            await asyncio.sleep(max(0.0, interval - elapsed_time))
             continue
-        else:
-            #print("PC is not idle")
-            interval = 1.0
-            last_value_pixels = pixels
 
-        max_by_subpixels = np.empty([pixels.shape[0], pixels.shape[1]])
+        last_value_pixels = np.copy(pixels)
+
+        max_by_subpixels = np.empty(shape=(pixels.shape[0], pixels.shape[1]), dtype=np.uint8)
         for i in range(max_by_subpixels.shape[0]):
             for j in range(max_by_subpixels.shape[1]):
                 max_by_subpixels[i][j] = max(pixels[i][j])
 
-        brightness_modifier = np.mean(max_by_subpixels) / 255.0 + 0.5  # 0 - 255 range to 0.5 - 1.5
+        #brightness_modifier = np.mean(max_by_subpixels) / 255.0 + 0.5                              # 0 - 255   to   0.5 - 1.5
+        brightness_addition = (np.mean(max_by_subpixels) / 255.0 - 0.5) * brightness_addition_range # 0 - 255   to   -(1/4 of brightness range) - (1/4 of brightness range)
 
         async with (lock):
             global BASE_BRIGHTNESS
-            adjusted_brightness = round(BASE_BRIGHTNESS * brightness_modifier)
+            #adjusted_brightness = round(BASE_BRIGHTNESS * brightness_modifier)
+            adjusted_brightness = round(BASE_BRIGHTNESS + brightness_addition)
 
         adjusted_brightness = max(brightness_min, min(brightness_max, adjusted_brightness))
 
         if adjusted_brightness != last_value_adjusted_brightness:
             if abs(adjusted_brightness - last_value_adjusted_brightness) >= 5:
-                set_monitor_brightness_smoothly(adjusted_brightness, monitors, interval)
+                set_monitor_brightness_smoothly(adjusted_brightness, interval)
             else:
-                set_monitor_brightness(adjusted_brightness, monitors)
+                sbc.set_brightness(adjusted_brightness)
 
+            #set_monitor_brightness(adjusted_brightness, monitors)
             last_value_adjusted_brightness = adjusted_brightness
 
-
-
-        log(f"Current base brightness: {BASE_BRIGHTNESS}%")
-        log(f"Adapted brightness: {adjusted_brightness}%\n")
+        #print(f"Current base brightness: {BASE_BRIGHTNESS}%")
+        #print(f"Adapted brightness: {adjusted_brightness}%\n")
 
         end_time = time()
         elapsed_time = end_time - start_time
         #print(f"Elapsed time: {elapsed_time:.3f} seconds")
         #print(f"Sleep time: {max((0, interval - elapsed_time)):.3f} seconds\n")
 
-        await asyncio.sleep(max((0, interval - elapsed_time)))
+        await asyncio.sleep(max(0.0, interval - elapsed_time))
 
 
 async def main():
     default_min_brightness  = 20
-    default_max_brightness  = 70
+    default_max_brightness  = 80
     default_change_speed    = 1.0
     default_latitude        = None
     default_longitude       = None
@@ -422,15 +329,11 @@ async def main():
     time_zone   = get_timezone_from_coordinates(latitude, longitude)
     location    = LocationInfo(timezone=time_zone.zone, latitude=latitude, longitude=longitude)
 
-    monitors = sbc.list_monitors()
-
     #if plot_flag:
     #await plot_brightness_over_day(time_zone, location, brightness_min, brightness_max, change_speed)
 
-    capture_agent = d3dshot.create(capture_output="numpy")
-
     task1 = asyncio.create_task(brightness_control(brightness_min, brightness_max, change_speed, time_zone, location))
-    task2 = asyncio.create_task(brightness_adjustment(brightness_min, brightness_max, monitors, capture_agent))
+    task2 = asyncio.create_task(brightness_adjustment(brightness_min, brightness_max))
 
     await task1
     await task2
