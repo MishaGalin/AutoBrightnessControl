@@ -1,4 +1,4 @@
-Latest version (v1.3.5): https://drive.google.com/file/d/1Swpnr_JyXf6xic5yA71nK4ir8VznQFti/view?usp=sharing
+Latest version (v1.3.5): https://drive.google.com/file/d/1QnRQdU7UEXbo8nMFklBsfG7q-euMk_ei/view?usp=sharing
 
 Since the .exe file size in the latest update exceeds the GitHub limit of 100 MB, I uploaded it to Google Drive. The latest update uses an optimized DXcam library for screen capture, which also fixes a bug that disrupts the program when running full-screen applications, including games.
 
