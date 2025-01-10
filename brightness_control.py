@@ -31,7 +31,6 @@ def log(message: str) -> None:
         with open(LOG_FILE, "a") as file:
             file.write(message + "\n")
 
-
 # noinspection PyTypeChecker
 def save_coordinates_to_file(latitude: float,
                              longitude: float) -> None:
@@ -133,17 +132,15 @@ def calculate_brightness(sunrise: datetime,
 
     return brightness
 
-def set_monitor_brightness_smoothly(end_brightness: int,
+def set_monitor_brightness_smoothly(start_brightness: int,
+                                    end_brightness: int,
                                     animation_duration: float) -> None:
 
     def ease_out_sine(x: float) -> float:
         return sin(x * pi / 2.0)
 
     frame_duration = 1.0 / refreshrate.get()
-    start_brightness = sbc.get_brightness(display=0)[0]
-
-    start_time = time()
-    sleep(frame_duration)
+    start_time = time() - animation_duration / (end_brightness - start_brightness) # trick to prevent starting at 0 progress
 
     # Set the brightness of each monitor smoothly
     while True:
@@ -224,7 +221,7 @@ async def brightness_adjustment(brightness_min: int,
 
     interval = 1.0
     camera = dxcam.create()
-    last_value_adjusted_brightness = -999
+    last_value_adjusted_brightness = sbc.get_brightness(display=0)[0]
     last_value_pixels = None
     brightness_addition_range = (brightness_max - brightness_min) / 2
 
@@ -272,7 +269,7 @@ async def brightness_adjustment(brightness_min: int,
 
         if adjusted_brightness != last_value_adjusted_brightness:
             if abs(adjusted_brightness - last_value_adjusted_brightness) >= 5:
-                set_monitor_brightness_smoothly(adjusted_brightness, interval)
+                set_monitor_brightness_smoothly(last_value_adjusted_brightness, adjusted_brightness, interval)
             else:
                 sbc.set_brightness(adjusted_brightness)
 
