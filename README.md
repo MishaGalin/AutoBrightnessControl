@@ -1,5 +1,7 @@
 Latest version (v1.3.5): https://drive.google.com/file/d/1QnRQdU7UEXbo8nMFklBsfG7q-euMk_ei/view?usp=sharing
 
+The main change in version 1.3.x was adaptive brightness change depending on the content on the screen. I understand that not everyone needs such a function, and in this case I recommend downloading version 1.2.x.
+
 Since the .exe file size in the latest update exceeds the GitHub limit of 100 MB, I uploaded it to Google Drive. The latest update uses an optimized DXcam library for screen capture, which also fixes a bug that disrupts the program when running full-screen applications, including games.
 
 This app is very easy to use, all you have to do is to run brightness_control.exe (unless you want to change something with arguments). You don't need to have python interpreter or any python libraries installed.
