@@ -22,7 +22,7 @@ COORDINATES_FILE = "coordinates.json"  # File to store coordinates
 LOG_FILE = "brightness_control_log.txt"
 LOG = False
 
-lock = asyncio.Lock()
+base_brightness_change_lock = asyncio.Lock()
 
 BASE_BRIGHTNESS = 50.0
 
@@ -132,7 +132,7 @@ def calculate_brightness(sunrise: datetime,
 
     return brightness
 
-def set_monitor_brightness_smoothly(start_brightness: int,
+async def set_monitor_brightness_smoothly(start_brightness: int,
                                     end_brightness: int,
                                     animation_duration: float) -> None:
 
@@ -145,24 +145,33 @@ def set_monitor_brightness_smoothly(start_brightness: int,
 
     frame_duration = 1.0 / refreshrate.get()
     start_time = time() - animation_duration / (end_brightness - start_brightness) # trick to prevent starting at 0 progress
+    last_value_current_brightness = start_brightness
 
     while True:
         start_time_animation_step = time()
         progress = (start_time_animation_step - start_time) / animation_duration
         current_brightness = round(start_brightness + ease_out_sine(progress) * (end_brightness - start_brightness))
 
+        # the end of the animation
         if progress >= 1.0 or current_brightness == end_brightness:
             sbc.set_brightness(end_brightness)
             break
 
+        if current_brightness == last_value_current_brightness:
+            end_time_animation_step = time()
+            elapsed_time_animation_step = end_time_animation_step - start_time_animation_step
+            await asyncio.sleep(max(0.0, frame_duration - elapsed_time_animation_step))
+            continue
+
         sbc.set_brightness(current_brightness)
+        last_value_current_brightness = current_brightness
 
         end_time_animation_step = time()
         elapsed_time_animation_step = end_time_animation_step - start_time_animation_step
         #print(f"Fps: {(1.0 / elapsed_time_animation_step):.2f}\n")
         #print(f"Elapsed time animation step: {elapsed_time_animation_step:.3f}")
         #print(f"Sleeping for {frame_duration - elapsed_time_animation_step:.3f} seconds...")
-        sleep(max(0.0, frame_duration - elapsed_time_animation_step))
+        await asyncio.sleep(max(0.0, frame_duration - elapsed_time_animation_step))
 
 #async def plot_brightness_over_day(time_zone, location, brightness_min, brightness_max, change_speed):
 #    import matplotlib.pyplot as plt
@@ -208,7 +217,7 @@ async def brightness_control(brightness_min: int,
         s = sun(location.observer, date=current_time.date(), tzinfo=time_zone)
         sunrise, sunset = s["sunrise"], s["sunset"]
 
-        async with lock:
+        async with base_brightness_change_lock:
             global BASE_BRIGHTNESS
             BASE_BRIGHTNESS = calculate_brightness(sunrise, sunset, current_time, brightness_min, brightness_max, change_speed)
 
@@ -240,8 +249,12 @@ async def brightness_adjustment(brightness_min: int,
             await asyncio.sleep(max(0.0, interval - elapsed_time))
             continue
 
-        divider_y = screenshot.shape[0] // 80
-        divider_x = screenshot.shape[1] // 80
+        aspect_ratio = screenshot.shape[1] / screenshot.shape[0]
+        divider_y = round(screenshot.shape[0] / 60)
+        divider_x = round(screenshot.shape[1] / (60 * aspect_ratio))
+
+        #divider_y = 20
+        #divider_x = 20
 
         pixels = screenshot[    divider_y : -divider_y : divider_y,
                                 divider_x : -divider_x : divider_x] # take every pixel with a step of 'divider' except the edges
@@ -261,9 +274,9 @@ async def brightness_adjustment(brightness_min: int,
                 max_by_subpixels[i][j] = max(pixels[i][j])
 
         #brightness_modifier = np.mean(max_by_subpixels) / 255.0 + 0.5                              # 0 - 255   to   0.5 - 1.5
-        brightness_addition = (np.mean(max_by_subpixels) / 255.0 - 0.5) * brightness_addition_range # 0 - 255   to   -(1/4 of brightness range) - (1/4 of brightness range)
+        brightness_addition = float((np.mean(max_by_subpixels) / 255.0 - 0.5) * brightness_addition_range) # 0 - 255   to   -(1/4 of brightness range) - (1/4 of brightness range)
 
-        async with (lock):
+        async with (base_brightness_change_lock):
             global BASE_BRIGHTNESS
             #adjusted_brightness = round(BASE_BRIGHTNESS * brightness_modifier)
             adjusted_brightness = round(BASE_BRIGHTNESS + brightness_addition)
@@ -272,7 +285,7 @@ async def brightness_adjustment(brightness_min: int,
 
         if adjusted_brightness != last_value_adjusted_brightness:
             if abs(adjusted_brightness - last_value_adjusted_brightness) >= 5:
-                set_monitor_brightness_smoothly(last_value_adjusted_brightness, adjusted_brightness, interval)
+                await set_monitor_brightness_smoothly(last_value_adjusted_brightness, adjusted_brightness, interval)
             else:
                 sbc.set_brightness(adjusted_brightness)
 
@@ -292,7 +305,7 @@ async def brightness_adjustment(brightness_min: int,
 
 async def main():
     default_min_brightness  = 20
-    default_max_brightness  = 80
+    default_max_brightness  = 70
     default_change_speed    = 1.0
     default_latitude        = None
     default_longitude       = None
@@ -332,11 +345,11 @@ async def main():
     #if plot_flag:
     #await plot_brightness_over_day(time_zone, location, brightness_min, brightness_max, change_speed)
 
-    task1 = asyncio.create_task(brightness_control(brightness_min, brightness_max, change_speed, time_zone, location))
-    task2 = asyncio.create_task(brightness_adjustment(brightness_min, brightness_max))
+    task_brightness_control = asyncio.create_task(brightness_control(brightness_min, brightness_max, change_speed, time_zone, location))
+    task_brightness_adjustment = asyncio.create_task(brightness_adjustment(brightness_min, brightness_max))
 
-    await task1
-    await task2
+    await task_brightness_control
+    await task_brightness_adjustment
 
 
 asyncio.run(main())
