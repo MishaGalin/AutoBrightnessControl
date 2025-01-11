@@ -7,7 +7,7 @@ This app is actually very easy to use, all you have to do is to run brightness_c
 
 You can also create a task in Windows Task Manager to have this app autorun on startup with desired arguments using create_task.bat (run as administrator).
 
-![Screenshot_29](https://github.com/user-attachments/assets/ce38f5c0-ccf5-4ab6-a352-58400efb104a)
+![Screenshot_29](https://github.com/user-attachments/assets/ea6eac12-ee0a-4b93-a715-699ec71f7b6e)
 
 Latitude and longitude are determined by your IP address, not GPS or anything else, so it would be determined incorrectly if you are using a VPN when the app launches.
 
