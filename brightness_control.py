@@ -133,8 +133,8 @@ def calculate_brightness(sunrise: datetime,
     return brightness
 
 async def set_monitor_brightness_smoothly(start_brightness: int,
-                                    end_brightness: int,
-                                    animation_duration: float) -> None:
+                                          end_brightness: int,
+                                          animation_duration: float) -> None:
 
     def ease_out_sine(x: float) -> float:
         return sin(x * pi / 2.0)
@@ -173,7 +173,12 @@ async def set_monitor_brightness_smoothly(start_brightness: int,
         #print(f"Sleeping for {frame_duration - elapsed_time_animation_step:.3f} seconds...")
         await asyncio.sleep(max(0.0, frame_duration - elapsed_time_animation_step))
 
-#async def plot_brightness_over_day(time_zone, location, brightness_min, brightness_max, change_speed):
+#def plot_brightness_over_day(brightness_min: int,
+#                                   brightness_max: int,
+#                                   change_speed: float,
+#                                   time_zone: timezone,
+#                                   location: LocationInfo):
+#
 #    import matplotlib.pyplot as plt
 #
 #    times = []
@@ -184,8 +189,7 @@ async def set_monitor_brightness_smoothly(start_brightness: int,
 #    s = sun(location.observer, date=current_time.date(), tzinfo=time_zone)
 #    sunrise, sunset = s["sunrise"], s["sunset"]
 #
-#    # Разбиваем день на интервалы для отображения
-#    step = 1  # Разбиваем день на интервалы по минутам
+#    step = 1
 #    current_time = sunrise
 #
 #    while current_time < sunrise + timedelta(days=1):
@@ -194,7 +198,6 @@ async def set_monitor_brightness_smoothly(start_brightness: int,
 #        brightness_values.append(brightness)
 #        current_time += timedelta(minutes=step)
 #
-#    # Отображаем график
 #    plt.figure(figsize=(10, 5))
 #    plt.plot(times, brightness_values, label="Brightness", color='blue')
 #    plt.xlabel("Time")
@@ -253,9 +256,6 @@ async def brightness_adjustment(brightness_min: int,
         divider_y = round(screenshot.shape[0] / 60)
         divider_x = round(screenshot.shape[1] / (60 * aspect_ratio))
 
-        #divider_y = 20
-        #divider_x = 20
-
         pixels = screenshot[    divider_y : -divider_y : divider_y,
                                 divider_x : -divider_x : divider_x] # take every pixel with a step of 'divider' except the edges
 
@@ -289,7 +289,6 @@ async def brightness_adjustment(brightness_min: int,
             else:
                 sbc.set_brightness(adjusted_brightness)
 
-            #set_monitor_brightness(adjusted_brightness, monitors)
             last_value_adjusted_brightness = adjusted_brightness
 
         #print(f"Current base brightness: {BASE_BRIGHTNESS}%")
@@ -319,7 +318,6 @@ async def main():
     parser.add_argument("--lat",    type=float, default=default_latitude,       help=f"Latitude (default: {'automatic detection' if default_latitude is None else default_latitude})")
     parser.add_argument("--lng",    type=float, default=default_longitude,      help=f"Longitude (default: {'automatic detection' if default_longitude is None else default_longitude})")
     parser.add_argument("--log",    action="store_true",                        help=f"Enable logging (default: {default_log})")
-    #parser.add_argument("--plot",   action="store_true",                        help=f"Enable display of brightness graph (default: {default_log})")
     args = parser.parse_args()
 
     brightness_min  = args.min
@@ -334,16 +332,13 @@ async def main():
     if latitude is None or longitude is None:
         latitude, longitude = get_coordinates()
 
-    #plot_flag = args.plot
-
     log(f"Brightness range: {brightness_min}% - {brightness_max}%")
     log(f"Coordinates: {latitude}, {longitude}")
 
     time_zone   = get_timezone_from_coordinates(latitude, longitude)
     location    = LocationInfo(timezone=time_zone.zone, latitude=latitude, longitude=longitude)
 
-    #if plot_flag:
-    #await plot_brightness_over_day(time_zone, location, brightness_min, brightness_max, change_speed)
+    #plot_brightness_over_day(brightness_min, brightness_max, change_speed, time_zone, location)
 
     task_brightness_control = asyncio.create_task(brightness_control(brightness_min, brightness_max, change_speed, time_zone, location))
     task_brightness_adjustment = asyncio.create_task(brightness_adjustment(brightness_min, brightness_max))
