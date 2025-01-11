@@ -1,4 +1,4 @@
-Latest version (v1.3.5): https://drive.google.com/file/d/1AKqIjVrFCXjJIaOQHuyy00r7c3rlkHi8/view?usp=sharing
+Latest version (v1.3.5): https://drive.google.com/file/d/1YkLMF5a3i9eFmCsLebY7GPUV5brVWDYL/view?usp=sharing
 
 The main change in version 1.3.x was adaptive brightness change depending on the content on the screen. I understand that not everyone needs such a function, and in this case I recommend downloading version 1.2.x.
 Since the .exe file size in the latest update exceeds the GitHub limit of 100 MB, I uploaded it to Google Drive.
