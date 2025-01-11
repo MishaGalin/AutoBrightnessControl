@@ -9,6 +9,8 @@ You can also create a task in Windows Task Manager to have this app autorun on s
 
 Latitude and longitude are determined by your IP address, not GPS or anything else, so it would be determined incorrectly if you are using a VPN when the app launches.
 
+To stop running a program, end the task in Task Manager.
+
 You can get your coordinates on this website: https://www.latlong.net/
 
 Full list of arguments:
