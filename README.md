@@ -3,7 +3,7 @@ Latest version (v1.3.5): https://drive.google.com/file/d/1YkLMF5a3i9eFmCsLebY7GP
 The main change in version 1.3.x was adaptive brightness change depending on the content on the screen. I understand that not everyone needs such a function, and in this case I recommend downloading version 1.2.x.
 Since the .exe file size in the latest update exceeds the GitHub limit of 100 MB, I uploaded it to Google Drive.
 
-This app is actually very easy to use, all you have to do is to run brightness_control.exe (unless you want to change something with arguments). You don't need to have python interpreter or any python libraries installed.
+This app is actually very easy to use, all you have to do is to run brightness_control.exe (unless you want to change something with arguments). You don't need to have python interpreter or any python libraries installed. Also, one of the main goals was to keep the application's load on the system almost zero.
 
 You can also create a task in Windows Task Manager to have this app autorun on startup with desired arguments using create_task.bat (run as administrator).
 
