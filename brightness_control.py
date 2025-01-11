@@ -139,10 +139,13 @@ def set_monitor_brightness_smoothly(start_brightness: int,
     def ease_out_sine(x: float) -> float:
         return sin(x * pi / 2.0)
 
+    if start_brightness == end_brightness:
+        sbc.set_brightness(end_brightness)
+        return
+
     frame_duration = 1.0 / refreshrate.get()
     start_time = time() - animation_duration / (end_brightness - start_brightness) # trick to prevent starting at 0 progress
 
-    # Set the brightness of each monitor smoothly
     while True:
         start_time_animation_step = time()
         progress = (start_time_animation_step - start_time) / animation_duration
