@@ -241,7 +241,6 @@ async def brightness_adjustment(brightness_min: int,
     brightness_addition_range = (brightness_max - brightness_min) / 2
 
     while True:
-        #print(f"idle duration: {get_idle_duration()}")
         start_time = time()
         screenshot = camera.grab()
 
@@ -273,8 +272,8 @@ async def brightness_adjustment(brightness_min: int,
             for j in range(max_by_subpixels.shape[1]):
                 max_by_subpixels[i][j] = max(pixels[i][j])
 
-        #brightness_modifier = np.mean(max_by_subpixels) / 255.0 + 0.5                              # 0 - 255   to   0.5 - 1.5
-        brightness_addition = float((np.mean(max_by_subpixels) / 255.0 - 0.5) * brightness_addition_range) # 0 - 255   to   -(1/4 of brightness range) - (1/4 of brightness range)
+        #brightness_modifier = np.mean(max_by_subpixels) / 255.0 + 0.5                                      # 0 - 255   to   0.5 - 1.5
+        brightness_addition = float((np.mean(max_by_subpixels) / 255.0 - 0.5) * brightness_addition_range)  # 0 - 255   to   -(1/4 of brightness range) - (1/4 of brightness range)
 
         async with (base_brightness_change_lock):
             global BASE_BRIGHTNESS
@@ -309,7 +308,6 @@ async def main():
     default_latitude        = None
     default_longitude       = None
     default_log             = False
-    #default_plot_flag       = False
 
     parser = ArgumentParser(description="Brightness control based on sunrise and sunset.")
     parser.add_argument("--min",    type=int,   default=default_min_brightness, help=f"Minimum brightness (default: {default_min_brightness})")
