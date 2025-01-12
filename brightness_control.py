@@ -329,7 +329,7 @@ async def main():
     default_latitude                = None
     default_longitude               = None
     default_log                     = False
-    default_brightness_adj_enabled  = True
+    default_brightness_adj_enabled  = False
 
     parser = ArgumentParser(description="Brightness control based on sunrise and sunset.")
     parser.add_argument("--min",    type=int,   default=default_min_brightness,         help=f"Minimum brightness (default: {default_min_brightness})")
