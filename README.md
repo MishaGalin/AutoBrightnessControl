@@ -1,6 +1,6 @@
-Latest version (v1.3.5): https://drive.google.com/file/d/1YkLMF5a3i9eFmCsLebY7GPUV5brVWDYL/view?usp=sharing
+Latest version (v1.3.6): https://drive.google.com/file/d/1s0DB9gfcPvBVRzgNvYBUN4Var1eGSczM/view?usp=sharing
 
-The main change in version 1.3.x was adaptive brightness change depending on the content on the screen. I understand that not everyone needs such a function, and in this case I recommend downloading version 1.2.x.
+The main change in version 1.3.x was adaptive brightness change depending on the content on the screen. I understand that not everyone needs such a feature, that's why there is an argument -adj.
 Since the .exe file size in the latest update exceeds the GitHub limit of 100 MB, I uploaded it to Google Drive.
 
 This app is actually very easy to use, all you have to do is to run brightness_control.exe (unless you want to change something with arguments). You don't need to have python interpreter or any python libraries installed. Also, one of the main goals was to keep the application's load on the system almost zero.
@@ -28,6 +28,8 @@ Full list of arguments:
 --lng - Longitude (default: automatic detection)
 
 --log - Enable logging (default: False)
+
+--adj - Enable brightness adjustment (default: False)
 
 speed = 0.5:
 ![0 5](https://github.com/user-attachments/assets/d5e40796-5f55-4bdf-9441-119b854e05ff)
