@@ -3,7 +3,7 @@ from json import dump, load
 from requests import get, RequestException
 from ctypes import windll
 from argparse import ArgumentParser
-from time import sleep, time
+from time import time
 from sys import exit
 from math import sin, pi, sqrt
 from datetime import datetime, timedelta
@@ -21,10 +21,9 @@ UPDATE_INTERVAL = 60  # Update interval in seconds
 COORDINATES_FILE = "coordinates.json"  # File to store coordinates
 LOG_FILE = "brightness_control_log.txt"
 LOG = False
+BRIGHTNESS_ADJ_ENABLED = False
+BASE_BRIGHTNESS = 0.0
 
-base_brightness_change_lock = asyncio.Lock()
-
-BASE_BRIGHTNESS = 50.0
 
 def log(message: str) -> None:
     if LOG:
@@ -213,6 +212,11 @@ async def brightness_control(brightness_min: int,
                              time_zone: timezone,
                              location: LocationInfo) -> None:
 
+    """
+    Main function that controls BASE_BRIGHTNESS based on current time and sunrise/sunset times.
+    If BRIGHTNESS_ADJ_ENABLED is False, brightness are changing by this function and set to BASE_BRIGHTNESS.
+    """
+
     while True:
         start_time = time()
         current_time = datetime.now(time_zone)
@@ -220,9 +224,11 @@ async def brightness_control(brightness_min: int,
         s = sun(location.observer, date=current_time.date(), tzinfo=time_zone)
         sunrise, sunset = s["sunrise"], s["sunset"]
 
-        async with base_brightness_change_lock:
-            global BASE_BRIGHTNESS
-            BASE_BRIGHTNESS = calculate_brightness(sunrise, sunset, current_time, brightness_min, brightness_max, change_speed)
+        global BASE_BRIGHTNESS
+        BASE_BRIGHTNESS = calculate_brightness(sunrise, sunset, current_time, brightness_min, brightness_max, change_speed)
+
+        if not BRIGHTNESS_ADJ_ENABLED:
+            sbc.set_brightness(round(BASE_BRIGHTNESS))
 
         log(f"Current time: {format(current_time, '%H:%M:%S')}, Sunrise: {format(sunrise, '%H:%M:%S')}, Sunset: {format(sunset, '%H:%M:%S')}")
         log(f"Base brightness: {BASE_BRIGHTNESS}%\n")
@@ -233,6 +239,9 @@ async def brightness_control(brightness_min: int,
 
 async def brightness_adjustment(brightness_min: int,
                                 brightness_max: int) -> None:
+    """
+    Function that adjusts brightness based on content on the screen, if BRIGHTNESS_ADJ_ENABLED is True.
+    """
 
     interval = 1.0
     camera = dxcam.create()
@@ -272,13 +281,10 @@ async def brightness_adjustment(brightness_min: int,
             for j in range(max_by_subpixels.shape[1]):
                 max_by_subpixels[i][j] = max(pixels[i][j])
 
-        #brightness_modifier = np.mean(max_by_subpixels) / 255.0 + 0.5                                      # 0 - 255   to   0.5 - 1.5
         brightness_addition = float((np.mean(max_by_subpixels) / 255.0 - 0.5) * brightness_addition_range)  # 0 - 255   to   -(1/4 of brightness range) - (1/4 of brightness range)
 
-        async with (base_brightness_change_lock):
-            global BASE_BRIGHTNESS
-            #adjusted_brightness = round(BASE_BRIGHTNESS * brightness_modifier)
-            adjusted_brightness = round(BASE_BRIGHTNESS + brightness_addition)
+        global BASE_BRIGHTNESS
+        adjusted_brightness = round(BASE_BRIGHTNESS + brightness_addition)
 
         adjusted_brightness = max(brightness_min, min(brightness_max, adjusted_brightness))
 
@@ -302,20 +308,22 @@ async def brightness_adjustment(brightness_min: int,
 
 
 async def main():
-    default_min_brightness  = 20
-    default_max_brightness  = 70
-    default_change_speed    = 1.0
-    default_latitude        = None
-    default_longitude       = None
-    default_log             = False
+    default_min_brightness          = 20
+    default_max_brightness          = 70
+    default_change_speed            = 1.0
+    default_latitude                = None
+    default_longitude               = None
+    default_log                     = False
+    default_brightness_adj_enabled  = False
 
     parser = ArgumentParser(description="Brightness control based on sunrise and sunset.")
-    parser.add_argument("--min",    type=int,   default=default_min_brightness, help=f"Minimum brightness (default: {default_min_brightness})")
-    parser.add_argument("--max",    type=int,   default=default_max_brightness, help=f"Maximum brightness (default: {default_max_brightness})")
-    parser.add_argument("--speed",  type=float, default=default_change_speed,   help=f"Lower values make the transition around sunset and sunrise faster. Recommended value is from 0.5 to 1.0 (default: {default_change_speed})")
-    parser.add_argument("--lat",    type=float, default=default_latitude,       help=f"Latitude (default: {'automatic detection' if default_latitude is None else default_latitude})")
-    parser.add_argument("--lng",    type=float, default=default_longitude,      help=f"Longitude (default: {'automatic detection' if default_longitude is None else default_longitude})")
-    parser.add_argument("--log",    action="store_true",                        help=f"Enable logging (default: {default_log})")
+    parser.add_argument("--min",    type=int,   default=default_min_brightness,         help=f"Minimum brightness (default: {default_min_brightness})")
+    parser.add_argument("--max",    type=int,   default=default_max_brightness,         help=f"Maximum brightness (default: {default_max_brightness})")
+    parser.add_argument("--speed",  type=float, default=default_change_speed,           help=f"Lower values make the transition around sunset and sunrise faster. Recommended value is from 0.5 to 1.0 (default: {default_change_speed})")
+    parser.add_argument("--lat",    type=float, default=default_latitude,               help=f"Latitude (default: {'automatic detection' if default_latitude is None else default_latitude})")
+    parser.add_argument("--lng",    type=float, default=default_longitude,              help=f"Longitude (default: {'automatic detection' if default_longitude is None else default_longitude})")
+    parser.add_argument("--log",    type=bool,  default=default_log,                    help=f"Enable logging (default: {default_log})")
+    parser.add_argument("--adj",    type=bool,  default=default_brightness_adj_enabled, help=f"Enable brightness adjustment (default: {default_brightness_adj_enabled})")
     args = parser.parse_args()
 
     brightness_min  = args.min
@@ -323,6 +331,9 @@ async def main():
     change_speed    = args.speed
     latitude        = args.lat
     longitude       = args.lng
+
+    global BRIGHTNESS_ADJ_ENABLED
+    BRIGHTNESS_ADJ_ENABLED = args.adj
 
     global LOG
     LOG = args.log
@@ -339,10 +350,11 @@ async def main():
     #plot_brightness_over_day(brightness_min, brightness_max, change_speed, time_zone, location)
 
     task_brightness_control = asyncio.create_task(brightness_control(brightness_min, brightness_max, change_speed, time_zone, location))
-    task_brightness_adjustment = asyncio.create_task(brightness_adjustment(brightness_min, brightness_max))
+
+    if BRIGHTNESS_ADJ_ENABLED:
+        task_brightness_adjustment = asyncio.create_task(brightness_adjustment(brightness_min, brightness_max))
+        await task_brightness_adjustment
 
     await task_brightness_control
-    await task_brightness_adjustment
-
 
 asyncio.run(main())
