@@ -1,13 +1,13 @@
-Latest version (v1.3.5): https://drive.google.com/file/d/1YkLMF5a3i9eFmCsLebY7GPUV5brVWDYL/view?usp=sharing
+Latest version (v1.3.6): https://drive.google.com/file/d/1s0DB9gfcPvBVRzgNvYBUN4Var1eGSczM/view?usp=sharing
 
-The main change in version 1.3.x was adaptive brightness change depending on the content on the screen. I understand that not everyone needs such a function, and in this case I recommend downloading version 1.2.x.
+The main change in version 1.3.x was adaptive brightness change depending on the content on the screen. I understand that not everyone needs such a feature, that's why there is an argument --adj.
 Since the .exe file size in the latest update exceeds the GitHub limit of 100 MB, I uploaded it to Google Drive.
 
 This app is actually very easy to use, all you have to do is to run brightness_control.exe (unless you want to change something with arguments). You don't need to have python interpreter or any python libraries installed. Also, one of the main goals was to keep the application's load on the system almost zero.
 
 You can also create a task in Windows Task Manager to have this app autorun on startup with desired arguments using create_task.bat (run as administrator).
 
-![Screenshot_29](https://github.com/user-attachments/assets/ea6eac12-ee0a-4b93-a715-699ec71f7b6e)
+![Screenshot_30](https://github.com/user-attachments/assets/bb4f7dda-2743-4487-b54d-8563f545abe9)
 
 Latitude and longitude are determined by your IP address, not GPS or anything else, so it would be determined incorrectly if you are using a VPN when the app launches.
 
@@ -28,6 +28,8 @@ Full list of arguments:
 --lng - Longitude (default: automatic detection)
 
 --log - Enable logging (default: False)
+
+--adj - Enable brightness adjustment (default: False)
 
 speed = 0.5:
 ![0 5](https://github.com/user-attachments/assets/d5e40796-5f55-4bdf-9441-119b854e05ff)
