@@ -1,4 +1,4 @@
-Latest version (v1.3.6): https://drive.google.com/file/d/1s0DB9gfcPvBVRzgNvYBUN4Var1eGSczM/view?usp=sharing
+Latest version (v1.3.6): https://drive.google.com/file/d/1OZTqTfESeuYEkmRtXUgrQjYcSg_epmaD/view?usp=sharing
 
 The main change in version 1.3.x was adaptive brightness change depending on the content on the screen. I understand that not everyone needs such a feature, that's why there is an argument --adj.
 Since the .exe file size in the latest update exceeds the GitHub limit of 100 MB, I uploaded it to Google Drive.
