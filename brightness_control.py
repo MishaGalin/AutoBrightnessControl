@@ -143,20 +143,27 @@ async def set_monitor_brightness_smoothly(start_brightness: int,
         return
 
     frame_duration = 1.0 / refreshrate.get()
+    last_value_current_brightness = start_brightness
     start_time = time()
 
     while True:
         start_time_animation_step = time()
         progress = (start_time_animation_step - start_time) / animation_duration
         current_brightness = round(start_brightness + progress * (end_brightness - start_brightness))
-        #print(f"Progress: {progress:.3f}, Current brightness: {current_brightness}")
 
         # the end of the animation
         if progress >= 1.0 or current_brightness == end_brightness:
             sbc.set_brightness(end_brightness)
             break
 
+        if current_brightness == last_value_current_brightness:
+            end_time_animation_step = time()
+            elapsed_time_animation_step = end_time_animation_step - start_time_animation_step
+            await asyncio.sleep(max(0.0, frame_duration - elapsed_time_animation_step))
+            continue
+
         sbc.set_brightness(current_brightness)
+        last_value_current_brightness = current_brightness
 
         end_time_animation_step = time()
         elapsed_time_animation_step = end_time_animation_step - start_time_animation_step
