@@ -34,8 +34,10 @@ jobs:
       - name: Create Release and Upload Files
         uses: ncipollo/release-action@v1
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           tag: v1.3.6
           name: "AutoBrightnessControl v1.3.6"
+          body: "The main change in version 1.3.x was adaptive brightness change depending on the content on the screen. I understand that not everyone needs such a feature, that's why there is an argument --adj."
           draft: false
           prerelease: false
           artifacts: |
