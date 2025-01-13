@@ -1,4 +1,13 @@
-This app is actually very easy to use, all you have to do is to run brightness_control.exe (unless you want to change something with arguments). You don't need to have python interpreter or any python libraries installed. Also, one of the main goals was to keep the application's load on the system almost zero.
+# Environment Setup
+
+```
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+# How to use
+
+All you have to do is to run brightness_control.exe (unless you want to change something with arguments). You don't need to have python interpreter or any python libraries installed. Also, one of the main goals was to keep the application's load on the system almost zero.
 
 You can also create a task in Windows Task Manager to have this app autorun on startup with desired arguments using create_task.bat (run as administrator).
 
