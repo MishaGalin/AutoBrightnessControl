@@ -9,7 +9,7 @@ pip install -r requirements.txt
 
 All you have to do is to run brightness_control.exe (unless you want to change something with arguments). You don't need to have python interpreter or any python libraries installed. Also, one of the main goals was to keep the application's load on the system almost zero.
 
-You can also create a task in Windows Task Manager to have this app autorun on startup with desired arguments using create_task.bat (run as administrator).
+You can also create a task in Windows Task Manager to have this app autorun on startup with desired arguments using create_task.bat (run as administrator) if it is in the same folder as brightness_control.exe.
 
 ![Screenshot_30](https://github.com/user-attachments/assets/bb4f7dda-2743-4487-b54d-8563f545abe9)
 
