@@ -7,9 +7,9 @@ pip install -r requirements.txt
 
 # How to use
 
-All you have to do is to run brightness_control.exe (unless you want to change something with arguments). You don't need to have python interpreter or any python libraries installed. Also, one of the main goals was to keep the application's load on the system almost zero.
+All you have to do is to run ```brightness_control.exe``` (unless you want to change something with arguments). You don't need to have python interpreter or any python libraries installed. Also, one of the main goals was to keep the application's load on the system almost zero.
 
-You can also create a task in Windows Task Manager to have this app autorun on startup with desired arguments using create_task.bat (run as administrator) if it is in the same folder as brightness_control.exe.
+You can also create a task in Windows Task Manager to have this app autorun on startup with desired arguments using ```create_task.bat``` (run as administrator) if it is in the same folder as ```brightness_control.exe```.
 
 ![Screenshot_30](https://github.com/user-attachments/assets/bb4f7dda-2743-4487-b54d-8563f545abe9)
 
@@ -21,17 +21,17 @@ You can get your coordinates on this website: https://www.latlong.net/
 
 Full list of arguments:
 
---min - Minimum brightness (default: 20)
+```--min``` - Minimum brightness (default: 20)
 
---max - Maximum brightness (default: 70)
+```--max``` - Maximum brightness (default: 70)
 
---speed - Lower values make the transition around sunset and sunrise faster. Recommended value is from 0.5 to 1.0 (default: 1.0)
+```--speed``` - Lower values make the transition around sunset and sunrise faster. Recommended value is from 0.5 to 1.0 (default: 1.0)
 
---lat - Latitude (default: automatic detection)
+```--lat``` - Latitude (default: automatic detection)
 
---lng - Longitude (default: automatic detection)
+```--lng``` - Longitude (default: automatic detection)
 
---adj - Enable brightness adjustment (default: False)
+```--adj``` - Enable brightness adjustment (default: False)
 
 speed = 0.5:
 ![0 5](https://github.com/user-attachments/assets/d5e40796-5f55-4bdf-9441-119b854e05ff)
