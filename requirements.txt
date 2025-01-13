@@ -1,0 +1,8 @@
+requests
+pytz
+astral
+timezonefinder
+dxcam
+numpy
+refreshrate
+screen-brightness-control
