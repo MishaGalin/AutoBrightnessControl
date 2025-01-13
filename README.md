@@ -13,7 +13,7 @@ You can also create a task in Windows Task Manager to have this app autorun on s
 
 ![Screenshot_30](https://github.com/user-attachments/assets/bb4f7dda-2743-4487-b54d-8563f545abe9)
 
-Latitude and longitude are determined by your IP address using http://ipinfo.io/json so it would be determined incorrectly if you are using a VPN when the app launches. Your data will NOT be sent to any third party.
+Latitude and longitude are determined by your IP address using http://ipinfo.io/json so it would be determined incorrectly if you are using a VPN when the app launches.
 
 To close the application, end the task in Task Manager.
 
