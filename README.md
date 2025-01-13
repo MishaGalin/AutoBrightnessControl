@@ -33,6 +33,8 @@ Full list of arguments:
 
 ```--adj``` - Enable brightness adjustment (default: False)
 
+---
+
 speed = 0.5:
 ![0 5](https://github.com/user-attachments/assets/d5e40796-5f55-4bdf-9441-119b854e05ff)
 
@@ -41,6 +43,8 @@ speed = 0.75:
 
 speed = 1.0:
 ![1 0](https://github.com/user-attachments/assets/41ed7861-4ef0-436b-bdfa-e57a4e782130)
+
+---
 
 I recommend use it with Auto Dark Mode application, which uses latitude and longitude coordinates too to change Windows theme to dark and light mode automatically. Particularly this application inspired me to create AutoBrightnessControl.
 
