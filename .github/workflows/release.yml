@@ -35,7 +35,7 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           tag: v1.3.6
-          release_name: "Brightness Control v1.3.6"
+          name: "AutoBrightnessControl v1.3.6"
           draft: false
           prerelease: false
           artifacts: |
