@@ -37,4 +37,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: brightness_control_exe
-          path: brightness_control.exe
+          path: dist/brightness_control.exe
