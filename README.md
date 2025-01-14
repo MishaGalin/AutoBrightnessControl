@@ -115,11 +115,10 @@ current_brightness = max(
     brightness_min, min(brightness_max, current_brightness)
 )
 
-await set_monitor_brightness_smoothly(
-    last_value_current_brightness, current_brightness, 1.0
-)
-
-last_value_current_brightness = current_brightness
+if current_brightness != last_value_current_brightness:
+    await set_monitor_brightness_smoothly(
+        last_value_current_brightness, current_brightness, 1.0
+    )
 ```
 
 ---
