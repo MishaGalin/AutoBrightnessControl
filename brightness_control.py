@@ -223,14 +223,11 @@ async def brightness_adjustment(
             await asyncio.sleep(max(0.0, update_interval - elapsed_time))
             continue
 
-        aspect_ratio = screenshot.shape[1] / screenshot.shape[0]
-        divider_y = round(screenshot.shape[0] / 60)
-        divider_x = round(screenshot.shape[1] / (60 * aspect_ratio))
+        pixel_density = 60
+        divider = round(screenshot.shape[0] / pixel_density)
 
-        pixels = screenshot[
-            divider_y:-divider_y:divider_y, divider_x:-divider_x:divider_x
-        ]
         # take pixels with a step of 'divider' except the edges
+        pixels = screenshot[divider::divider, divider::divider]
 
         max_by_subpixels = np.empty(
             shape=(pixels.shape[0], pixels.shape[1]), dtype=np.uint8
