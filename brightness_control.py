@@ -217,34 +217,29 @@ async def brightness_adjustment(
         start_time = time()
         screenshot = camera.grab()
 
-        if screenshot is None:
-            end_time = time()
-            elapsed_time = end_time - start_time
-            await asyncio.sleep(max(0.0, update_interval - elapsed_time))
-            continue
+        if screenshot is not None:
+            pixel_density = 60
+            divider = round(screenshot.shape[0] / pixel_density)
 
-        pixel_density = 60
-        divider = round(screenshot.shape[0] / pixel_density)
+            # take pixels with a step of 'divider' except the edges
+            pixels = screenshot[divider::divider, divider::divider]
 
-        # take pixels with a step of 'divider' except the edges
-        pixels = screenshot[divider::divider, divider::divider]
+            max_by_subpixels = np.empty(
+                shape=(pixels.shape[0], pixels.shape[1]), dtype=np.uint8
+            )
 
-        max_by_subpixels = np.empty(
-            shape=(pixels.shape[0], pixels.shape[1]), dtype=np.uint8
-        )
+            for i in range(max_by_subpixels.shape[0]):
+                for j in range(max_by_subpixels.shape[1]):
+                    max_by_subpixels[i][j] = max(pixels[i][j])
 
-        for i in range(max_by_subpixels.shape[0]):
-            for j in range(max_by_subpixels.shape[1]):
-                max_by_subpixels[i][j] = max(pixels[i][j])
+            brightness_addition = float(
+                (np.mean(max_by_subpixels) / 255.0 - 0.5)
+                * brightness_addition_range
+            )
+            # 0 - 255   to   -(1/4 of brightness range) - (1/4 of brightness range)
 
-        brightness_addition = float(
-            (np.mean(max_by_subpixels) / 255.0 - 0.5)
-            * brightness_addition_range
-        )
-        # 0 - 255   to   -(1/4 of brightness range) - (1/4 of brightness range)
-
-        global BASE_BRIGHTNESS, ADJUSTED_BRIGHTNESS
-        ADJUSTED_BRIGHTNESS = BASE_BRIGHTNESS + brightness_addition
+            global BASE_BRIGHTNESS, ADJUSTED_BRIGHTNESS
+            ADJUSTED_BRIGHTNESS = BASE_BRIGHTNESS + brightness_addition
 
         end_time = time()
         elapsed_time = end_time - start_time
