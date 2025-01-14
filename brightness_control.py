@@ -66,7 +66,7 @@ def get_coordinates() -> tuple[float, float]:
     if (latitude is None) or (longitude is None):
         windll.user32.MessageBoxW(
             0,
-            "Error: Unable to determine coordinates. Please check your internet connection or set coordinates manually using --lat and --lng.",
+            "Error: Unable to determine coordinates.\n\nPlease check your internet connection or set coordinates manually using --lat and --lng.",
             "Error",
             0,
         )
@@ -346,7 +346,9 @@ async def main():
     if not (0 <= brightness_max <= 100):
         raise ValueError("Maximum brightness must be between 0 and 100.")
     if not (brightness_min < brightness_max):
-        raise ValueError("Minimum brightness must be less than maximum brightness.")
+        raise ValueError(
+            "Minimum brightness must be less than maximum brightness."
+        )
 
     if latitude is None or longitude is None:
         latitude, longitude = get_coordinates()
@@ -380,11 +382,6 @@ async def main():
     )
 
     await task_brightness_control
-
-    if brightness_adj_enabled:
-        await task_brightness_adjustment
-
-    await task_update_display_brightness
 
 
 asyncio.run(main())
