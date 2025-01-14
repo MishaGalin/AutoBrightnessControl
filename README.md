@@ -67,8 +67,6 @@ screenshot = camera.grab()
 
 Next, only a very small part of the pixels is taken from the full screenshot
 
-Actually, I tried using CUDA for this task and it worked much faster for much larger number of pixels up to full screenshot. But the size of .exe file in this case is about 1.1 GB, or to run .py script you need to have CUDA Toolkit, and cupy libraries installed correctly.
-
 ```
 aspect_ratio = screenshot.shape[1] / screenshot.shape[0]
 
