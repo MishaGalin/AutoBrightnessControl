@@ -81,7 +81,9 @@ pixels = screenshot[
 We go through each pixel and take the maximum along its subpixels, so that, for example, pixel (0, 0, 255) is equivalent to pixel (255, 255, 255)
 
 ```
-max_by_subpixels = np.empty(shape=(pixels.shape[0], pixels.shape[1]), dtype=np.uint8)
+max_by_subpixels = np.empty(
+    shape=(pixels.shape[0], pixels.shape[1]), dtype=np.uint8
+)
 
 for i in range(max_by_subpixels.shape[0]):
     for j in range(max_by_subpixels.shape[1]):
