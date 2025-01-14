@@ -116,15 +116,11 @@ current_brightness = max(
     brightness_min, min(brightness_max, current_brightness)
 )
 
-if current_brightness != last_value_current_brightness:
-    if abs(current_brightness - last_value_current_brightness) >= 5:
-        await set_monitor_brightness_smoothly(
-            last_value_current_brightness, current_brightness, 1.0
-        )
-    else:
-        sbc.set_brightness(current_brightness)
+await set_monitor_brightness_smoothly(
+    last_value_current_brightness, current_brightness, 1.0
+)
 
-    last_value_current_brightness = current_brightness
+last_value_current_brightness = current_brightness
 ```
 
 ---
