@@ -108,6 +108,7 @@ def calculate_brightness(
 
     if sunrise <= current_time <= sunset:  # Daytime phase
         progress = (current_time - sunrise).total_seconds() / day_duration
+
         brightness = (
             brightness_min
             + brightness_range
@@ -121,6 +122,7 @@ def calculate_brightness(
             progress = (
                 current_time - sunset + timedelta(days=1)
             ).total_seconds() / night_duration
+
         brightness = (
             brightness_max
             - brightness_range
@@ -155,18 +157,9 @@ async def set_monitor_brightness_smoothly(
             sbc.set_brightness(end_brightness)
             break
 
-        if current_brightness == last_value_current_brightness:
-            end_time_animation_step = time()
-            elapsed_time_animation_step = (
-                end_time_animation_step - start_time_animation_step
-            )
-            await asyncio.sleep(
-                max(0.0, frame_duration - elapsed_time_animation_step)
-            )
-            continue
-
-        sbc.set_brightness(current_brightness)
-        last_value_current_brightness = current_brightness
+        if current_brightness != last_value_current_brightness:
+            sbc.set_brightness(current_brightness)
+            last_value_current_brightness = current_brightness
 
         end_time_animation_step = time()
         elapsed_time_animation_step = (
@@ -236,11 +229,13 @@ async def brightness_adjustment(
 
         pixels = screenshot[
             divider_y:-divider_y:divider_y, divider_x:-divider_x:divider_x
-        ]  # take pixels with a step of 'divider' except the edges
+        ]
+        # take pixels with a step of 'divider' except the edges
 
         max_by_subpixels = np.empty(
             shape=(pixels.shape[0], pixels.shape[1]), dtype=np.uint8
         )
+
         for i in range(max_by_subpixels.shape[0]):
             for j in range(max_by_subpixels.shape[1]):
                 max_by_subpixels[i][j] = max(pixels[i][j])
