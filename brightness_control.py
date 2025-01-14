@@ -1,6 +1,6 @@
 from os import path
 from json import dump, load
-from requests import get
+from requests import get, RequestException
 from ctypes import windll
 from argparse import ArgumentParser
 from time import time
@@ -41,14 +41,15 @@ def load_coordinates_from_file() -> tuple[float | None, float | None]:
 
 
 def get_coordinates_by_ip() -> tuple[float | None, float | None]:
-    response = get("http://ipinfo.io/json", timeout=10)
-    response.raise_for_status()  # Raise an exception if the request was unsuccessful
-    data = response.json()
-    if "loc" in data:
-        latitude, longitude = map(float, data["loc"].split(","))
-        return latitude, longitude
-    else:
+    try:
+        response = get("https://ipinfo.io/json", timeout=10)
+        response.raise_for_status()  # Raise an exception if the request was unsuccessful
+    except (RequestException, ValueError):
         return None, None
+
+    data = response.json()
+    latitude, longitude = map(float, data["loc"].split(","))
+    return latitude, longitude
 
 
 def get_coordinates() -> tuple[float, float]:
@@ -65,7 +66,7 @@ def get_coordinates() -> tuple[float, float]:
     if (latitude is None) or (longitude is None):
         windll.user32.MessageBoxW(
             0,
-            "Error: Unable to determine coordinates. Exiting\nBut you can set them manually using arguments --lat and --lng",
+            "Error: Unable to determine coordinates. Please check your internet connection or set coordinates manually using --lat and --lng.",
             "Error",
             0,
         )
@@ -339,6 +340,13 @@ async def main():
     latitude = args.lat
     longitude = args.lng
     brightness_adj_enabled = args.adj
+
+    if not (0 <= brightness_min <= 100):
+        raise ValueError("Minimum brightness must be between 0 and 100.")
+    if not (0 <= brightness_max <= 100):
+        raise ValueError("Maximum brightness must be between 0 and 100.")
+    if not (brightness_min < brightness_max):
+        raise ValueError("Minimum brightness must be less than maximum brightness.")
 
     if latitude is None or longitude is None:
         latitude, longitude = get_coordinates()
