@@ -51,6 +51,82 @@ speed = 1.0:
 
 ---
 
+# Brightness adjustment: how it works
+
+First, we define a brightness adjustment range equal to half the brightness range set by the user
+
+```
+brightness_addition_range = (brightness_max - brightness_min) / 2
+```
+
+Every period of time, the program takes a screenshot of your screen
+
+```
+screenshot = camera.grab()
+```
+
+Next, only a very small part of the pixels is taken from the full screenshot
+
+```
+aspect_ratio = screenshot.shape[1] / screenshot.shape[0]
+
+divider_y = round(screenshot.shape[0] / 60)
+divider_x = round(screenshot.shape[1] / (60 * aspect_ratio))
+
+pixels = screenshot[
+  divider_y:-divider_y:divider_y, divider_x:-divider_x:divider_x
+]
+```
+
+We go through each pixel and take the maximum along its subpixels, so that, for example, pixel (0, 0, 255) is equivalent to pixel (255, 255, 255)
+
+```
+max_by_subpixels = np.empty(shape=(pixels.shape[0], pixels.shape[1]), dtype=np.uint8)
+
+for i in range(max_by_subpixels.shape[0]):
+  for j in range(max_by_subpixels.shape[1]):
+    max_by_subpixels[i][j] = max(pixels[i][j])
+```
+
+Taking the average of these maxima and transforming the ranges, we get how much we want to change the brightness relative to the base brightness (the brightness determined by the time of day).
+
+```
+brightness_addition = float(
+  (np.mean(max_by_subpixels) / 255.0 - 0.5)
+  * brightness_addition_range
+)
+
+global BASE_BRIGHTNESS, ADJUSTED_BRIGHTNESS
+ADJUSTED_BRIGHTNESS = BASE_BRIGHTNESS + brightness_addition
+```
+
+When setting this brightness to monitors, it will be limited by the minimum and maximum brightness set by the user
+
+```
+if brightness_adj_enabled:
+    global ADJUSTED_BRIGHTNESS
+    current_brightness = ADJUSTED_BRIGHTNESS
+else:
+    global BASE_BRIGHTNESS
+    current_brightness = BASE_BRIGHTNESS
+
+current_brightness = round(current_brightness)
+current_brightness = max(brightness_min, min(brightness_max, current_brightness))
+
+if current_brightness != last_value_current_brightness:
+    if abs(current_brightness - last_value_current_brightness) >= 5:
+        await set_monitor_brightness_smoothly(
+            last_value_current_brightness, current_brightness, 1.0
+        )
+
+    else:
+        sbc.set_brightness(current_brightness)
+    
+    last_value_current_brightness = current_brightness
+```
+
+---
+
 I recommend use it with Auto Dark Mode application, which uses latitude and longitude coordinates too to change Windows theme to dark and light mode automatically. Particularly this application inspired me to create AutoBrightnessControl.
 
 This program has been tested on Windows 10 and 11 only with a single monitor setup. But it should work properly on multi-monitor setups as well.
