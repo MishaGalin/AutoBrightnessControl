@@ -68,14 +68,11 @@ screenshot = camera.grab()
 Next, only a very small part of the pixels is taken from the full screenshot
 
 ```
-aspect_ratio = screenshot.shape[1] / screenshot.shape[0]
+pixel_density = 60
+divider = round(screenshot.shape[0] / pixel_density)
 
-divider_y = round(screenshot.shape[0] / 60)
-divider_x = round(screenshot.shape[1] / (60 * aspect_ratio))
-
-pixels = screenshot[
-    divider_y:-divider_y:divider_y, divider_x:-divider_x:divider_x
-]
+# take pixels with a step of 'divider' except the edges
+pixels = screenshot[divider::divider, divider::divider]
 ```
 
 We go through each pixel and take the maximum along its subpixels, so that, for example, pixel (0, 0, 255) is equivalent to pixel (255, 255, 255)
