@@ -248,7 +248,8 @@ async def brightness_adjustment(
         brightness_addition = float(
             (np.mean(max_by_subpixels) / 255.0 - 0.5)
             * brightness_addition_range
-        )  # 0 - 255   to   -(1/4 of brightness range) - (1/4 of brightness range)
+        )
+        # 0 - 255   to   -(1/4 of brightness range) - (1/4 of brightness range)
 
         global BASE_BRIGHTNESS, ADJUSTED_BRIGHTNESS
         ADJUSTED_BRIGHTNESS = BASE_BRIGHTNESS + brightness_addition
@@ -285,15 +286,11 @@ async def update_display_brightness(
             brightness_min, min(brightness_max, current_brightness)
         )
 
-        if current_brightness != last_value_current_brightness:
-            if abs(current_brightness - last_value_current_brightness) >= 5:
-                await set_monitor_brightness_smoothly(
-                    last_value_current_brightness, current_brightness, 1.0
-                )
-            else:
-                sbc.set_brightness(current_brightness)
+        await set_monitor_brightness_smoothly(
+            last_value_current_brightness, current_brightness, 1.0
+        )
 
-            last_value_current_brightness = current_brightness
+        last_value_current_brightness = current_brightness
 
         end_time = time()
         elapsed_time = end_time - start_time
