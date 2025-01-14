@@ -74,7 +74,7 @@ divider_y = round(screenshot.shape[0] / 60)
 divider_x = round(screenshot.shape[1] / (60 * aspect_ratio))
 
 pixels = screenshot[
-  divider_y:-divider_y:divider_y, divider_x:-divider_x:divider_x
+    divider_y:-divider_y:divider_y, divider_x:-divider_x:divider_x
 ]
 ```
 
@@ -84,17 +84,18 @@ We go through each pixel and take the maximum along its subpixels, so that, for 
 max_by_subpixels = np.empty(shape=(pixels.shape[0], pixels.shape[1]), dtype=np.uint8)
 
 for i in range(max_by_subpixels.shape[0]):
-  for j in range(max_by_subpixels.shape[1]):
-    max_by_subpixels[i][j] = max(pixels[i][j])
+    for j in range(max_by_subpixels.shape[1]):
+        max_by_subpixels[i][j] = max(pixels[i][j])
 ```
 
 Taking the average of these maxima and transforming the ranges, we get how much we want to change the brightness relative to the base brightness (the brightness determined by the time of day).
 
 ```
 brightness_addition = float(
-  (np.mean(max_by_subpixels) / 255.0 - 0.5)
-  * brightness_addition_range
+    (np.mean(max_by_subpixels) / 255.0 - 0.5)
+    * brightness_addition_range
 )
+# 0 - 255   to   -(1/4 of brightness range) - (1/4 of brightness range)
 
 global BASE_BRIGHTNESS, ADJUSTED_BRIGHTNESS
 ADJUSTED_BRIGHTNESS = BASE_BRIGHTNESS + brightness_addition
