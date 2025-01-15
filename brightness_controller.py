@@ -71,13 +71,14 @@ class BrightnessController:
             raise ValueError("Can't find timezone by given coordinates.")
         return timezone(timezone_name)
 
-    def get_coordinates(self) -> tuple[float, float]:
-        latitude, longitude = self.get_coordinates_by_ip()
+    @staticmethod
+    def get_coordinates() -> tuple[float, float]:
+        latitude, longitude = BrightnessController.get_coordinates_by_ip()
         if (latitude is not None) and (longitude is not None):
-            self.save_coordinates_to_file(latitude, longitude, "coordinates.json")
+            BrightnessController.save_coordinates_to_file(latitude, longitude, "coordinates.json")
 
         if (latitude is None) or (longitude is None):
-            latitude, longitude = self.load_coordinates_from_file("coordinates.json")
+            latitude, longitude = BrightnessController.load_coordinates_from_file("coordinates.json")
 
         if (latitude is None) or (longitude is None):
             windll.user32.MessageBoxW(
