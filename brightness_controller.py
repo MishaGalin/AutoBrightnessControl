@@ -109,7 +109,6 @@ class BrightnessController:
 
         if sunrise <= current_time <= sunset:
             progress = (current_time - sunrise).total_seconds() / day_duration
-
             brightness = (
                 self.min
                 + brightness_range * (sin(pi * progress) ** change_speed_day + 1) / 2
@@ -144,9 +143,6 @@ class BrightnessController:
             current_brightness = round(
                 start_brightness + progress * (end_brightness - start_brightness)
             )
-
-            # the end of the animation
-
             if progress >= 1.0 or current_brightness == end_brightness:
                 sbc.set_brightness(end_brightness)
                 break
