@@ -113,7 +113,7 @@ current_brightness = max(
 )
 
 if current_brightness != last_brightness:
-    await self.set_monitor_brightness_smoothly(
+    await self.set_brightness_smoothly(
         last_brightness, current_brightness, 1.0
     )
 ```
