@@ -74,7 +74,7 @@ async def main():
     if latitude is None or longitude is None:
         latitude, longitude = controller.get_coordinates()
 
-    time_zone = controller.get_timezone_from_coordinates(latitude, longitude)
+    time_zone = controller.get_timezone(latitude, longitude)
     location = LocationInfo(
         timezone=time_zone.zone, latitude=latitude, longitude=longitude
     )
@@ -90,7 +90,7 @@ async def main():
     if brightness_adj_enabled:
         asyncio.create_task(controller.start_brightness_adjustment(2.0))
 
-    asyncio.create_task(controller.start_update_display_brightness(2.0))
+    asyncio.create_task(controller.start_brightness_update(2.0))
 
     await task_brightness_control
 

@@ -64,7 +64,7 @@ class BrightnessController:
             return None, None
 
     @staticmethod
-    def get_timezone_from_coordinates(latitude: float, longitude: float) -> timezone:
+    def get_timezone(latitude: float, longitude: float) -> timezone:
         tf = TimezoneFinder()
         timezone_name = tf.certain_timezone_at(lng=longitude, lat=latitude)
         if timezone_name is None:
@@ -126,7 +126,7 @@ class BrightnessController:
         return brightness
 
     @staticmethod
-    async def set_monitor_brightness_smoothly(
+    async def set_brightness_smoothly(
         start_brightness: int, end_brightness: int, animation_duration: float
     ) -> None:
 
@@ -135,7 +135,7 @@ class BrightnessController:
             return
 
         frame_duration = 1.0 / refreshrate.get()
-        last_value_current_brightness = start_brightness
+        last_brightness = start_brightness
         start_time = time()
 
         while True:
@@ -150,9 +150,9 @@ class BrightnessController:
                 sbc.set_brightness(end_brightness)
                 break
 
-            if current_brightness != last_value_current_brightness:
+            if current_brightness != last_brightness:
                 sbc.set_brightness(current_brightness)
-                last_value_current_brightness = current_brightness
+                last_brightness = current_brightness
 
             end_time_animation_step = time()
             elapsed_time_animation_step = (
@@ -227,7 +227,7 @@ class BrightnessController:
             elapsed_time = end_time - start_time
             await asyncio.sleep(max(0.0, update_interval - elapsed_time))
 
-    async def start_update_display_brightness(
+    async def start_brightness_update(
         self,
         update_interval: float,
     ) -> None:
@@ -250,7 +250,7 @@ class BrightnessController:
             )
 
             if current_brightness != last_brightness:
-                await self.set_monitor_brightness_smoothly(
+                await self.set_brightness_smoothly(
                     last_brightness, current_brightness, 1.0
                 )
                 last_brightness = current_brightness
