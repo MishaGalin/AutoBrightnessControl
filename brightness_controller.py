@@ -198,6 +198,9 @@ class BrightnessController:
         Function that continuously adjusts brightness based on content on the screen.
         """
 
+        if not self.adj_enabled:
+            return
+
         camera = dxcam.create()
         brightness_addition_range = (self.max - self.min) / 2
 

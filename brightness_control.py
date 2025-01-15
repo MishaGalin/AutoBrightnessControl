@@ -79,20 +79,15 @@ async def main():
         timezone=time_zone.zone, latitude=latitude, longitude=longitude
     )
 
-    task_brightness_control = asyncio.create_task(
+    await asyncio.gather(
         controller.start_brightness_control(
             time_zone,
             location,
             60.0,
-        )
+        ),
+        controller.start_brightness_adjustment(2.0),
+        controller.start_brightness_update(2.0),
     )
-
-    if brightness_adj_enabled:
-        asyncio.create_task(controller.start_brightness_adjustment(2.0))
-
-    asyncio.create_task(controller.start_brightness_update(2.0))
-
-    await task_brightness_control
 
 
 asyncio.run(main())
