@@ -87,14 +87,14 @@ for i in range(max_by_subpixels.shape[0]):
         max_by_subpixels[i][j] = max(pixels[i][j])
 ```
 
-Taking the average of these maxima and transforming the ranges, we get how much we want to change the brightness relative to the base brightness (the brightness determined by the time of day).
+Taking the average of these maxima and transforming the ranges, we get how much we want to change the brightness relative to the base brightness (the brightness determined by the time of day)
 
 ```
 brightness_addition = float(
     (np.mean(max_by_subpixels) / 255.0 - 0.5)
     * brightness_addition_range
 )
-# 0 - 255   to   -(1/4 of brightness range) - (1/4 of brightness range)
+# 0 - 255   to   (-1/4 of brightness range) - (1/4 of brightness range)
 
 global BASE_BRIGHTNESS, ADJUSTED_BRIGHTNESS
 ADJUSTED_BRIGHTNESS = BASE_BRIGHTNESS + brightness_addition
