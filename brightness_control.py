@@ -72,9 +72,9 @@ async def main():
     )
 
     if latitude is None or longitude is None:
-        latitude, longitude = bc.BrightnessController.get_coordinates()
+        latitude, longitude = controller.get_coordinates()
 
-    time_zone = bc.BrightnessController.get_timezone(latitude, longitude)
+    time_zone = controller.get_timezone(latitude, longitude)
     location = LocationInfo(
         timezone=time_zone.zone, latitude=latitude, longitude=longitude
     )
