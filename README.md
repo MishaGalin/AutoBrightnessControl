@@ -40,16 +40,25 @@ Full list of arguments:
 
 ---
 
-speed = 0.5:
+```
+--speed 0.5
+```
 ![0 5](https://github.com/user-attachments/assets/d5e40796-5f55-4bdf-9441-119b854e05ff)
 
-speed = 0.75:
+---
+
+```
+--speed 0.75
+```
 ![0 75](https://github.com/user-attachments/assets/57bc00d4-cccc-461d-beef-124dccc6212a)
 
-speed = 1.0:
-![1 0](https://github.com/user-attachments/assets/41ed7861-4ef0-436b-bdfa-e57a4e782130)
-
 ---
+
+```
+--speed 1.0
+```
+
+![1 0](https://github.com/user-attachments/assets/41ed7861-4ef0-436b-bdfa-e57a4e782130)
 
 # Brightness adjustment: how it works
 
