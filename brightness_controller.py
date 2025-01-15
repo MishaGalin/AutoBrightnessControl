@@ -33,6 +33,7 @@ class BrightnessController:
         self.adjusted_brightness = 0.0
 
     # noinspection PyTypeChecker
+
     @staticmethod
     def save_coordinates_to_file(
         latitude: float, longitude: float, file_name: str
@@ -55,7 +56,7 @@ class BrightnessController:
     @staticmethod
     def get_coordinates_by_ip() -> tuple[float | None, float | None]:
         try:
-            response = get("https://ipinfo.io/json", timeout=10)
+            response = get(url="https://ipinfo.io/json", timeout=10)
             response.raise_for_status()
             data = response.json()
             latitude, longitude = map(float, data["loc"].split(","))
@@ -75,11 +76,13 @@ class BrightnessController:
     def get_coordinates() -> tuple[float, float]:
         latitude, longitude = BrightnessController.get_coordinates_by_ip()
         if (latitude is not None) and (longitude is not None):
-            BrightnessController.save_coordinates_to_file(latitude, longitude, "coordinates.json")
-
+            BrightnessController.save_coordinates_to_file(
+                latitude, longitude, "coordinates.json"
+            )
         if (latitude is None) or (longitude is None):
-            latitude, longitude = BrightnessController.load_coordinates_from_file("coordinates.json")
-
+            latitude, longitude = BrightnessController.load_coordinates_from_file(
+                "coordinates.json"
+            )
         if (latitude is None) or (longitude is None):
             windll.user32.MessageBoxW(
                 0,
@@ -89,7 +92,6 @@ class BrightnessController:
                 0,
             )
             exit(1)
-
         return latitude, longitude
 
     def calculate_base_brightness(
@@ -107,6 +109,7 @@ class BrightnessController:
 
         if sunrise <= current_time <= sunset:
             progress = (current_time - sunrise).total_seconds() / day_duration
+
             brightness = (
                 self.min
                 + brightness_range * (sin(pi * progress) ** change_speed_day + 1) / 2
@@ -118,23 +121,19 @@ class BrightnessController:
                 progress = (
                     current_time - sunset + timedelta(days=1)
                 ).total_seconds() / night_duration
-
             brightness = (
                 self.max
                 - brightness_range * (sin(pi * progress) ** change_speed_night + 1) / 2
             )
-
         return brightness
 
     @staticmethod
     async def set_brightness_smoothly(
         start_brightness: int, end_brightness: int, animation_duration: float
     ) -> None:
-
         if start_brightness == end_brightness:
             sbc.set_brightness(end_brightness)
             return
-
         frame_duration = 1.0 / refreshrate.get()
         last_brightness = start_brightness
         start_time = time()
@@ -147,14 +146,13 @@ class BrightnessController:
             )
 
             # the end of the animation
+
             if progress >= 1.0 or current_brightness == end_brightness:
                 sbc.set_brightness(end_brightness)
                 break
-
             if current_brightness != last_brightness:
                 sbc.set_brightness(current_brightness)
                 last_brightness = current_brightness
-
             end_time_animation_step = time()
             elapsed_time_animation_step = (
                 end_time_animation_step - start_time_animation_step
@@ -193,10 +191,8 @@ class BrightnessController:
         """
         Function that continuously adjusts brightness based on content on the screen.
         """
-
         if not self.adj_enabled:
             return
-
         camera = dxcam.create()
         brightness_addition_range = (self.max - self.min) / 2
 
@@ -209,6 +205,7 @@ class BrightnessController:
                 divider = round(screenshot.shape[0] / pixel_density)
 
                 # Get a sub-matrix of pixels with a step of 'divider' excluding the edges
+
                 pixels = screenshot[divider::divider, divider::divider]
 
                 max_by_subpixels = np.empty(
@@ -218,7 +215,6 @@ class BrightnessController:
                 for i in range(max_by_subpixels.shape[0]):
                     for j in range(max_by_subpixels.shape[1]):
                         max_by_subpixels[i][j] = max(pixels[i][j])
-
                 brightness_addition = float(
                     (np.mean(max_by_subpixels) / 255.0 - 0.5)
                     * brightness_addition_range
@@ -226,7 +222,6 @@ class BrightnessController:
                 # 0 - 255   to   (-1/4 of brightness range) - (1/4 of brightness range)
 
                 self.adjusted_brightness = self.base_brightness + brightness_addition
-
             end_time = time()
             elapsed_time = end_time - start_time
             await asyncio.sleep(max(0.0, update_interval - elapsed_time))
@@ -247,7 +242,6 @@ class BrightnessController:
                 current_brightness = round(self.adjusted_brightness)
             else:
                 current_brightness = round(self.base_brightness)
-
             current_brightness = max(
                 self.min,
                 min(self.max, current_brightness),
@@ -258,7 +252,6 @@ class BrightnessController:
                     last_brightness, current_brightness, 1.0
                 )
                 last_brightness = current_brightness
-
             end_time = time()
             elapsed_time = end_time - start_time
             await asyncio.sleep(max(0.0, update_interval - elapsed_time))
