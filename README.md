@@ -71,7 +71,7 @@ Next, only a very small part of the pixels is taken from the full screenshot
 pixel_density = 60
 divider = round(screenshot.shape[0] / pixel_density)
 
-# take pixels with a step of 'divider' except the edges
+# Get a submatrix of pixels with a step of 'divider' excluding the edges
 pixels = screenshot[divider::divider, divider::divider]
 ```
 
@@ -87,14 +87,14 @@ for i in range(max_by_subpixels.shape[0]):
         max_by_subpixels[i][j] = max(pixels[i][j])
 ```
 
-Taking the average of these maxima and transforming the ranges, we get how much we want to change the brightness relative to the base brightness (the brightness determined by the time of day).
+Taking the average of these maxima and transforming the ranges, we get how much we want to change the brightness relative to the base brightness (the brightness determined by the time of day)
 
 ```
 brightness_addition = float(
     (np.mean(max_by_subpixels) / 255.0 - 0.5)
     * brightness_addition_range
 )
-# 0 - 255   to   -(1/4 of brightness range) - (1/4 of brightness range)
+# 0 - 255   to   (-1/4 of brightness range) - (1/4 of brightness range)
 
 global BASE_BRIGHTNESS, ADJUSTED_BRIGHTNESS
 ADJUSTED_BRIGHTNESS = BASE_BRIGHTNESS + brightness_addition
@@ -115,11 +115,10 @@ current_brightness = max(
     brightness_min, min(brightness_max, current_brightness)
 )
 
-await set_monitor_brightness_smoothly(
-    last_value_current_brightness, current_brightness, 1.0
-)
-
-last_value_current_brightness = current_brightness
+if current_brightness != last_value_current_brightness:
+    await set_monitor_brightness_smoothly(
+        last_value_current_brightness, current_brightness, 1.0
+    )
 ```
 
 ---
