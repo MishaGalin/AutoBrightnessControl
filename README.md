@@ -56,7 +56,7 @@ speed = 1.0:
 First, we define a brightness adjustment range equal to half the brightness range set by the user
 
 ```
-brightness_addition_range = (brightness_max - brightness_min) / 2
+brightness_addition_range = (self.max - self.min) / 2
 ```
 
 Every period of time, the program takes a screenshot of your screen
@@ -96,28 +96,25 @@ brightness_addition = float(
 )
 # 0 - 255   to   (-1/4 of brightness range) - (1/4 of brightness range)
 
-global BASE_BRIGHTNESS, ADJUSTED_BRIGHTNESS
-ADJUSTED_BRIGHTNESS = BASE_BRIGHTNESS + brightness_addition
+self.adjusted_brightness = self.base_brightness + brightness_addition
 ```
 
 When setting this brightness to monitors, it will be limited by the minimum and maximum brightness set by the user
 
 ```
-if brightness_adj_enabled:
-    global ADJUSTED_BRIGHTNESS
-    current_brightness = ADJUSTED_BRIGHTNESS
+if self.adj_enabled:
+    current_brightness = round(self.adjusted_brightness)
 else:
-    global BASE_BRIGHTNESS
-    current_brightness = BASE_BRIGHTNESS
+    current_brightness = round(self.base_brightness)
 
-current_brightness = round(current_brightness)
 current_brightness = max(
-    brightness_min, min(brightness_max, current_brightness)
+    self.min,
+    min(self.max, current_brightness),
 )
 
-if current_brightness != last_value_current_brightness:
-    await set_monitor_brightness_smoothly(
-        last_value_current_brightness, current_brightness, 1.0
+if current_brightness != last_brightness:
+    await self.set_monitor_brightness_smoothly(
+        last_brightness, current_brightness, 1.0
     )
 ```
 
