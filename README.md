@@ -79,8 +79,6 @@ Next, only a very small part of the pixels is taken from the full screenshot
 ```
 pixel_density = 60
 divider = round(screenshot.shape[0] / pixel_density)
-
-# Get a submatrix of pixels with a step of 'divider' excluding the edges
 pixels = screenshot[divider::divider, divider::divider]
 ```
 
