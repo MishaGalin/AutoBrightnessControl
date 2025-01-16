@@ -35,6 +35,7 @@ jobs:
           body: "The main change in version 1.3.x was adaptive brightness change depending on the content on the screen. I understand that not everyone needs such a feature, that's why there is an argument --adj."
           draft: false
           prerelease: false
+          makeLatest: true
           artifacts: |
             dist/brightness_control.exe
             create_task.bat
