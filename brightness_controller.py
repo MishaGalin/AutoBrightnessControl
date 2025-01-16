@@ -130,7 +130,7 @@ class BrightnessController:
     async def set_brightness_smoothly(
         start_brightness: int, end_brightness: int, animation_duration: float
     ) -> None:
-        if start_brightness == end_brightness:
+        if start_brightness == end_brightness or animation_duration < 0.0001:
             sbc.set_brightness(end_brightness)
             return
         frame_duration = 1.0 / refreshrate.get()
@@ -188,6 +188,7 @@ class BrightnessController:
     async def start_brightness_adjustment(self, update_interval: float) -> None:
         """
         Function that continuously adjusts brightness based on content on the screen.
+        Ends immediately if brightness adjustment is disabled.
         """
         if not self.adj_enabled:
             return
@@ -202,10 +203,8 @@ class BrightnessController:
             if screenshot is not None:
                 pixel_density = 60
                 divider = round(screenshot.shape[0] / pixel_density)
-
-                # Get a sub-matrix of pixels with a step of 'divider' excluding the edges
-
                 pixels = screenshot[divider::divider, divider::divider]
+                # Get a sub-matrix of pixels with a step of 'divider' excluding the edges
 
                 max_by_subpixels = np.empty(
                     shape=(pixels.shape[0], pixels.shape[1]), dtype=np.uint8
