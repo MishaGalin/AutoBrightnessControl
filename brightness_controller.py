@@ -39,7 +39,6 @@ class BrightnessController:
     ) -> None:
         with open(file_name, "w") as file:
             dump({"latitude": latitude, "longitude": longitude}, file)
-            file.close()
 
     @staticmethod
     def load_coordinates_from_file(
@@ -48,7 +47,6 @@ class BrightnessController:
         if path.exists(file_name):
             with open(file_name, "r") as file:
                 data = load(file)
-                file.close()
                 return data.get("latitude"), data.get("longitude")
         return None, None
 
@@ -133,7 +131,8 @@ class BrightnessController:
             sbc.set_brightness(end_brightness)
             return
         anim_step_duration = animation_duration / abs(end_brightness - start_brightness)
-        start_time = time()
+        last_brightness = start_brightness
+        start_time = time()  - anim_step_duration
 
         while True:
             anim_step_start_time = time()
@@ -144,7 +143,9 @@ class BrightnessController:
             if progress >= 1.0 or current_brightness == end_brightness:
                 sbc.set_brightness(end_brightness)
                 break
-            sbc.set_brightness(current_brightness)
+            if current_brightness != last_brightness:
+                sbc.set_brightness(current_brightness)
+                last_brightness = current_brightness
             anim_step_end_time = time()
             anim_step_elapsed_time = anim_step_end_time - anim_step_start_time
             await asyncio.sleep(max(0.0, anim_step_duration - anim_step_elapsed_time))
