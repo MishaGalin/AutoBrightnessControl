@@ -47,15 +47,7 @@ async def main():
         timezone=time_zone.zone, latitude=latitude, longitude=longitude
     )
 
-    await asyncio.gather(
-        controller.start_brightness_control(
-            time_zone,
-            location,
-            60.0,
-        ),
-        controller.start_brightness_adjustment(2.0),
-        controller.start_brightness_update(2.0),
-    )
+    await controller.start_main_loop(time_zone, location, update_interval=2.0)
 
 
 asyncio.run(main())

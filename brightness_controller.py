@@ -244,10 +244,27 @@ class BrightnessController:
             )
 
             if current_brightness != last_brightness:
-                await self.set_brightness_smoothly(
-                    last_brightness, current_brightness, 1.0
+                asyncio.create_task(
+                    self.set_brightness_smoothly(
+                        last_brightness, current_brightness, 1.0
+                    )
                 )
                 last_brightness = current_brightness
             end_time = time()
             elapsed_time = end_time - start_time
             await asyncio.sleep(max(0.0, update_interval - elapsed_time))
+
+    async def start_main_loop(
+        self, time_zone: timezone, location: LocationInfo, update_interval: float
+    ) -> None:
+        """
+        Function that starts the main loop of the brightness controller.
+        """
+        tasks = [
+            asyncio.create_task(
+                self.start_brightness_control(time_zone, location, update_interval)
+            ),
+            asyncio.create_task(self.start_brightness_adjustment(update_interval)),
+            asyncio.create_task(self.start_brightness_update(update_interval)),
+        ]
+        await asyncio.gather(*tasks)
