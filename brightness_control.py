@@ -42,12 +42,9 @@ async def main():
 
     if latitude is None or longitude is None:
         latitude, longitude = controller.get_coordinates()
-    time_zone = controller.get_timezone(latitude, longitude)
-    location = LocationInfo(
-        timezone=time_zone.zone, latitude=latitude, longitude=longitude
-    )
+    location = LocationInfo(latitude=latitude, longitude=longitude)
 
-    await controller.start_main_loop(time_zone, location, update_interval=2.0)
+    await controller.start_main_loop(location, update_interval=2.0)
 
 
 asyncio.run(main())

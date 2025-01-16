@@ -157,13 +157,14 @@ class BrightnessController:
 
     async def start_brightness_control(
         self,
-        time_zone: timezone,
         location: LocationInfo,
         update_interval: float,
     ) -> None:
         """
         Function that continuously controls brightness based on sunrise and sunset.
         """
+        time_zone = self.get_timezone(location.latitude, location.longitude)
+
         while True:
             start_time = time()
             current_time = datetime.now(time_zone)
@@ -255,14 +256,14 @@ class BrightnessController:
             await asyncio.sleep(max(0.0, update_interval - elapsed_time))
 
     async def start_main_loop(
-        self, time_zone: timezone, location: LocationInfo, update_interval: float
+        self, location: LocationInfo, update_interval: float
     ) -> None:
         """
         Function that starts the main loop of the brightness controller.
         """
         tasks = [
             asyncio.create_task(
-                self.start_brightness_control(time_zone, location, update_interval)
+                self.start_brightness_control(location, update_interval)
             ),
             asyncio.create_task(self.start_brightness_adjustment(update_interval)),
             asyncio.create_task(self.start_brightness_update(update_interval)),
