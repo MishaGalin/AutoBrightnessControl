@@ -164,6 +164,7 @@ class BrightnessController:
         Function that continuously controls brightness based on sunrise and sunset.
         """
         time_zone = self.get_timezone(location.latitude, location.longitude)
+        update_interval = max(0.0, update_interval)
 
         while True:
             start_time = time()
@@ -192,6 +193,7 @@ class BrightnessController:
             return
         camera = dxcam.create()
         brightness_addition_range = (self.max - self.min) / 2
+        update_interval = max(0.0, update_interval)
 
         while True:
             start_time = time()
@@ -231,6 +233,7 @@ class BrightnessController:
         Function that continuously updates the brightness of the display.
         """
         last_brightness = sbc.get_brightness(display=0)[0]
+        update_interval = max(0.0, update_interval)
 
         while True:
             start_time = time()
@@ -245,10 +248,8 @@ class BrightnessController:
             )
 
             if current_brightness != last_brightness:
-                asyncio.create_task(
-                    self.set_brightness_smoothly(
-                        last_brightness, current_brightness, 1.0
-                    )
+                await self.set_brightness_smoothly(
+                    last_brightness, current_brightness, 1.0
                 )
                 last_brightness = current_brightness
             end_time = time()
