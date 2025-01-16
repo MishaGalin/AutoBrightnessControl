@@ -13,7 +13,6 @@ from timezonefinder import TimezoneFinder
 import dxcam
 import numpy as np
 import asyncio
-import refreshrate
 import screen_brightness_control as sbc
 
 
@@ -133,27 +132,22 @@ class BrightnessController:
         if start_brightness == end_brightness or animation_duration < 0.0001:
             sbc.set_brightness(end_brightness)
             return
-        frame_duration = 1.0 / refreshrate.get()
-        last_brightness = start_brightness
+        anim_step_duration = animation_duration / abs(end_brightness - start_brightness)
         start_time = time()
 
         while True:
-            start_time_animation_step = time()
-            progress = (start_time_animation_step - start_time) / animation_duration
+            anim_step_start_time = time()
+            progress = (anim_step_start_time - start_time) / animation_duration
             current_brightness = round(
                 start_brightness + progress * (end_brightness - start_brightness)
             )
             if progress >= 1.0 or current_brightness == end_brightness:
                 sbc.set_brightness(end_brightness)
                 break
-            if current_brightness != last_brightness:
-                sbc.set_brightness(current_brightness)
-                last_brightness = current_brightness
-            end_time_animation_step = time()
-            elapsed_time_animation_step = (
-                end_time_animation_step - start_time_animation_step
-            )
-            await asyncio.sleep(max(0.0, frame_duration - elapsed_time_animation_step))
+            sbc.set_brightness(current_brightness)
+            anim_step_end_time = time()
+            anim_step_elapsed_time = anim_step_end_time - anim_step_start_time
+            await asyncio.sleep(max(0.0, anim_step_duration - anim_step_elapsed_time))
 
     async def start_brightness_control(
         self,
