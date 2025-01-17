@@ -10,7 +10,7 @@ async def main():
     default_change_speed = 1.0
     default_latitude = None
     default_longitude = None
-    default_brightness_adj_enabled = False
+    default_adaptive_brightness = False
 
     parser = ArgumentParser(
         description="Brightness control based on sunrise and sunset."
@@ -20,7 +20,7 @@ async def main():
     parser.add_argument("--speed", type=float, default=default_change_speed)
     parser.add_argument("--lat", type=float, default=default_latitude)
     parser.add_argument("--lng", type=float, default=default_longitude)
-    parser.add_argument("--adj", type=bool, default=default_brightness_adj_enabled)
+    parser.add_argument("--adapt", type=bool, default=default_adaptive_brightness)
     args = parser.parse_args()
 
     brightness_min = args.min
@@ -28,7 +28,7 @@ async def main():
     change_speed = args.speed
     latitude = args.lat
     longitude = args.lng
-    brightness_adj_enabled = args.adj
+    adaptive_brightness = args.adapt
 
     if not (0 <= brightness_min <= 100):
         raise ValueError("Minimum brightness must be between 0 and 100.")
@@ -37,7 +37,7 @@ async def main():
     if not (brightness_min < brightness_max):
         raise ValueError("Minimum brightness must be less than maximum brightness.")
     controller = bc.BrightnessController(
-        brightness_min, brightness_max, change_speed, brightness_adj_enabled
+        brightness_min, brightness_max, change_speed, adaptive_brightness
     )
 
     if latitude is None or longitude is None:

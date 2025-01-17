@@ -22,14 +22,14 @@ class BrightnessController:
         brightness_min: int,
         brightness_max: int,
         change_speed: float,
-        brightness_adj_enabled: bool,
+        adaptive_brightness: bool,
     ) -> None:
         self.min = brightness_min
         self.max = brightness_max
         self.change_speed = change_speed
-        self.adj_enabled = brightness_adj_enabled
+        self.adaptive_brightness = adaptive_brightness
         self.base_brightness = 0.0
-        self.adjusted_brightness = 0.0
+        self.adapted_brightness = 0.0
 
     # noinspection PyTypeChecker
 
@@ -132,7 +132,7 @@ class BrightnessController:
             return
         anim_step_duration = animation_duration / abs(end_brightness - start_brightness)
         last_brightness = start_brightness
-        start_time = time()  - anim_step_duration
+        start_time = time() - anim_step_duration
 
         while True:
             anim_step_start_time = time()
@@ -156,7 +156,7 @@ class BrightnessController:
         update_interval: float,
     ) -> None:
         """
-        Function that continuously controls brightness based on sunrise and sunset.
+        Continuously controls brightness based on sunrise and sunset.
         """
         time_zone = self.get_timezone(location.latitude, location.longitude)
         update_interval = max(0.0, update_interval)
@@ -180,15 +180,15 @@ class BrightnessController:
             elapsed_time = end_time - start_time
             await asyncio.sleep(max(0.0, update_interval - elapsed_time))
 
-    async def start_brightness_adjustment(self, update_interval: float) -> None:
+    async def start_brightness_adaptation(self, update_interval: float) -> None:
         """
-        Function that continuously adjusts brightness based on content on the screen.
-        Ends immediately if brightness adjustment is disabled.
+        Continuously adapts brightness based on content on the screen.
+        Ends immediately if adaptive brightness is disabled.
         """
-        if not self.adj_enabled:
+        if not self.adaptive_brightness:
             return
         camera = dxcam.create()
-        brightness_addition_range = (self.max - self.min) / 2
+        brightness_adaptation_range = (self.max - self.min) / 2
         update_interval = max(0.0, update_interval)
 
         while True:
@@ -210,11 +210,11 @@ class BrightnessController:
                         max_by_subpixels[i][j] = max(pixels[i][j])
                 brightness_addition = float(
                     (np.mean(max_by_subpixels) / 255.0 - 0.5)
-                    * brightness_addition_range
+                    * brightness_adaptation_range
                 )
                 # 0 - 255   to   (-1/4 of brightness range) - (1/4 of brightness range)
 
-                self.adjusted_brightness = self.base_brightness + brightness_addition
+                self.adapted_brightness = self.base_brightness + brightness_addition
             end_time = time()
             elapsed_time = end_time - start_time
             await asyncio.sleep(max(0.0, update_interval - elapsed_time))
@@ -224,7 +224,7 @@ class BrightnessController:
         update_interval: float,
     ) -> None:
         """
-        Function that continuously updates the brightness of the display.
+        Continuously updates the brightness of the display.
         """
         last_brightness = sbc.get_brightness(display=0)[0]
         update_interval = max(0.0, update_interval)
@@ -232,8 +232,8 @@ class BrightnessController:
         while True:
             start_time = time()
 
-            if self.adj_enabled:
-                current_brightness = round(self.adjusted_brightness)
+            if self.adaptive_brightness:
+                current_brightness = round(self.adapted_brightness)
             else:
                 current_brightness = round(self.base_brightness)
             current_brightness = max(
@@ -254,13 +254,13 @@ class BrightnessController:
         self, location: LocationInfo, update_interval: float
     ) -> None:
         """
-        Function that starts the main loop of the brightness controller.
+        Starts the main loop of the brightness controller.
         """
         tasks = [
             asyncio.create_task(
                 self.start_brightness_control(location, update_interval)
             ),
-            asyncio.create_task(self.start_brightness_adjustment(update_interval)),
+            asyncio.create_task(self.start_brightness_adaptation(update_interval)),
             asyncio.create_task(self.start_brightness_update(update_interval)),
         ]
         await asyncio.gather(*tasks)
