@@ -16,7 +16,7 @@ All you have to do is to run ```brightness_control.exe``` (unless you want to ch
 
 You can also create a task in Windows Task Manager to have this app autorun on startup with desired arguments using ```create_task.bat``` (run as administrator) if it is in the same folder as ```brightness_control.exe```.
 
-![Screenshot_30](https://github.com/user-attachments/assets/bb4f7dda-2743-4487-b54d-8563f545abe9)
+![Screenshot_34](https://github.com/user-attachments/assets/f443c976-2ccb-4e1a-8494-9b65a1324d61)
 
 Latitude and longitude are determined by your IP address using https://ipinfo.io/json so it would be determined incorrectly if you are using a VPN when the app launches.
 
