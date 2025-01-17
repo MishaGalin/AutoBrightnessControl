@@ -36,7 +36,7 @@ Full list of arguments:
 
 ```--lng``` - Longitude (default: automatic detection)
 
-```--adj``` - Enable brightness adjustment (default: False)
+```--adapt``` - Enable adaptive brightness (default: False)
 
 ---
 
@@ -60,12 +60,12 @@ Full list of arguments:
 
 ![1 0](https://github.com/user-attachments/assets/41ed7861-4ef0-436b-bdfa-e57a4e782130)
 
-# Brightness adjustment: how it works
+# Adaptive brightness: how it works
 
-First, we define a brightness adjustment range equal to half the brightness range set by the user
+First, we define a brightness adaptation range equal to half the brightness range set by the user
 
 ```
-brightness_addition_range = (self.max - self.min) / 2
+brightness_adaptation_range = (self.max - self.min) / 2
 ```
 
 Every period of time, the program takes a screenshot of your screen
@@ -99,21 +99,20 @@ Taking the average of these maxima and transforming the ranges, we get how much 
 ```
 brightness_addition = float(
     (np.mean(max_by_subpixels) / 255.0 - 0.5)
-    * brightness_addition_range
+    * brightness_adaptation_range
 )
 # 0 - 255   to   (-1/4 of brightness range) - (1/4 of brightness range)
 
-self.adjusted_brightness = self.base_brightness + brightness_addition
+self.adapted_brightness = self.base_brightness + brightness_addition
 ```
 
 When setting this brightness to monitors, it will be limited by the minimum and maximum brightness set by the user
 
 ```
-if self.adj_enabled:
-    current_brightness = round(self.adjusted_brightness)
+if self.adaptive_brightness:
+    current_brightness = round(self.adapted_brightness)
 else:
     current_brightness = round(self.base_brightness)
-
 current_brightness = max(
     self.min,
     min(self.max, current_brightness),
