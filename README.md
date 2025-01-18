@@ -16,7 +16,7 @@ All you have to do is to run ```brightness_control.exe``` (unless you want to ch
 
 You can also create a task in Windows Task Manager to have this app autorun on startup with desired arguments using ```create_task.bat``` (run as administrator) if it is in the same folder as ```brightness_control.exe```.
 
-![Screenshot_30](https://github.com/user-attachments/assets/bb4f7dda-2743-4487-b54d-8563f545abe9)
+![Screenshot_34](https://github.com/user-attachments/assets/f443c976-2ccb-4e1a-8494-9b65a1324d61)
 
 Latitude and longitude are determined by your IP address using https://ipinfo.io/json so it would be determined incorrectly if you are using a VPN when the app launches.
 
@@ -36,7 +36,7 @@ Full list of arguments:
 
 ```--lng``` - Longitude (default: automatic detection)
 
-```--adj``` - Enable brightness adjustment (default: False)
+```--adapt``` - Enable adaptive brightness (default: False)
 
 ---
 
@@ -60,12 +60,12 @@ Full list of arguments:
 
 ![1 0](https://github.com/user-attachments/assets/41ed7861-4ef0-436b-bdfa-e57a4e782130)
 
-# Brightness adjustment: how it works
+# Adaptive brightness: how it works
 
-First, we define a brightness adjustment range equal to half the brightness range set by the user
+First, we define a brightness adaptation range equal to half the brightness range set by the user
 
 ```
-brightness_addition_range = (self.max - self.min) / 2
+brightness_adaptation_range = (self.max - self.min) / 2
 ```
 
 Every period of time, the program takes a screenshot of your screen
@@ -99,21 +99,20 @@ Taking the average of these maxima and transforming the ranges, we get how much 
 ```
 brightness_addition = float(
     (np.mean(max_by_subpixels) / 255.0 - 0.5)
-    * brightness_addition_range
+    * brightness_adaptation_range
 )
 # 0 - 255   to   (-1/4 of brightness range) - (1/4 of brightness range)
 
-self.adjusted_brightness = self.base_brightness + brightness_addition
+self.adapted_brightness = self.base_brightness + brightness_addition
 ```
 
 When setting this brightness to monitors, it will be limited by the minimum and maximum brightness set by the user
 
 ```
-if self.adj_enabled:
-    current_brightness = round(self.adjusted_brightness)
+if self.adaptive_brightness:
+    current_brightness = round(self.adapted_brightness)
 else:
     current_brightness = round(self.base_brightness)
-
 current_brightness = max(
     self.min,
     min(self.max, current_brightness),
