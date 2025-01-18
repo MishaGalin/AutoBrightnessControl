@@ -125,7 +125,10 @@ class BrightnessController:
 
     @staticmethod
     async def set_brightness_smoothly(
-        start_brightness: int, end_brightness: int, animation_duration: float
+        start_brightness: int,
+        end_brightness: int,
+        animation_duration: float,
+        monitors: list[str],
     ) -> None:
         if start_brightness == end_brightness or animation_duration < 0.0001:
             sbc.set_brightness(end_brightness)
@@ -144,11 +147,31 @@ class BrightnessController:
                 sbc.set_brightness(end_brightness)
                 break
             if current_brightness != last_brightness:
-                sbc.set_brightness(current_brightness)
+                for monitor in monitors:
+                    sbc.set_brightness(current_brightness, display=monitor)
                 last_brightness = current_brightness
             anim_step_end_time = time()
             anim_step_elapsed_time = anim_step_end_time - anim_step_start_time
             await asyncio.sleep(max(0.0, anim_step_duration - anim_step_elapsed_time))
+
+    @staticmethod
+    def get_supported_monitors(all_monitors: list[str]) -> list[str]:
+        supported_monitors = []
+        for monitor in all_monitors:
+            try:
+                sbc.get_brightness(display=monitor)
+                supported_monitors.append(monitor)
+            except sbc.exceptions.ScreenBrightnessError:
+                continue
+        if len(supported_monitors) == 0:
+            windll.user32.MessageBoxW(
+                0,
+                "Error: Supported monitors not found",
+                "Error",
+                0,
+            )
+            exit(1)
+        return supported_monitors.copy()
 
     async def start_brightness_control(
         self,
@@ -226,12 +249,21 @@ class BrightnessController:
         """
         Continuously updates the brightness of the display.
         """
-        last_brightness = sbc.get_brightness(display=0)[0]
         update_interval = max(0.0, update_interval)
+        last_brightness = 0
+        supported_monitors = []
+        last_all_monitors = []
 
         while True:
             start_time = time()
 
+            # Update the list of monitors and select those that support brightness adjustment
+
+            all_monitors = sbc.list_monitors()
+            if all_monitors != last_all_monitors:
+                supported_monitors = self.get_supported_monitors(all_monitors)
+                last_brightness = sbc.get_brightness(display=supported_monitors[0])[0]
+                last_all_monitors = all_monitors
             if self.adaptive_brightness:
                 current_brightness = round(self.adapted_brightness)
             else:
@@ -243,7 +275,7 @@ class BrightnessController:
 
             if current_brightness != last_brightness:
                 await self.set_brightness_smoothly(
-                    last_brightness, current_brightness, 1.0
+                    last_brightness, current_brightness, 1.0, supported_monitors
                 )
                 last_brightness = current_brightness
             end_time = time()

@@ -44,7 +44,7 @@ async def main():
         latitude, longitude = controller.get_coordinates()
     location = LocationInfo(latitude=latitude, longitude=longitude)
 
-    await controller.start_main_loop(location, update_interval=2.0)
+    await controller.start_main_loop(location, 2.0)
 
 
 asyncio.run(main())
