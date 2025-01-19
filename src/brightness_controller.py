@@ -241,6 +241,9 @@ class BrightnessController:
         """
         tasks = []
 
+        if not self.adaptive_brightness:
+            self.task_queue = tuple(filter(lambda x: x != "adaptation", self.task_queue))
+
         for task in self.task_queue:
             if task == "control":
                 tasks.append(
