@@ -1,7 +1,8 @@
 from argparse import ArgumentParser
 from astral import LocationInfo
+from src.brightness_controller import BrightnessController
+from src.location import get_coordinates
 import asyncio
-import brightness_controller as bc
 
 
 async def main():
@@ -36,12 +37,12 @@ async def main():
         raise ValueError("Maximum brightness must be between 0 and 100.")
     if not (brightness_min < brightness_max):
         raise ValueError("Minimum brightness must be less than maximum brightness.")
-    controller = bc.BrightnessController(
+    controller = BrightnessController(
         brightness_min, brightness_max, change_speed, adaptive_brightness
     )
 
     if latitude is None or longitude is None:
-        latitude, longitude = controller.get_coordinates()
+        latitude, longitude = get_coordinates()
     location = LocationInfo(latitude=latitude, longitude=longitude)
 
     await controller.start_main_loop(location, 2.0)
