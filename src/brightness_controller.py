@@ -1,15 +1,11 @@
-from os import path
-from json import dump, load
-from requests import get, RequestException
 from ctypes import windll
 from time import time
 from sys import exit
 from math import sin, pi, sqrt
 from datetime import datetime, timedelta
-from pytz import timezone
 from astral.sun import sun
 from astral import LocationInfo
-from timezonefinder import TimezoneFinder
+from src.location import get_timezone
 import dxcam
 import numpy as np
 import asyncio
@@ -30,98 +26,6 @@ class BrightnessController:
         self.adaptive_brightness = adaptive_brightness
         self.base_brightness = 0.0
         self.adapted_brightness = 0.0
-
-    # noinspection PyTypeChecker
-
-    @staticmethod
-    def save_coordinates_to_file(
-        latitude: float, longitude: float, file_name: str
-    ) -> None:
-        with open(file_name, "w") as file:
-            dump({"latitude": latitude, "longitude": longitude}, file)
-
-    @staticmethod
-    def load_coordinates_from_file(
-        file_name: str,
-    ) -> tuple[float | None, float | None]:
-        if path.exists(file_name):
-            with open(file_name, "r") as file:
-                data = load(file)
-                return data.get("latitude"), data.get("longitude")
-        return None, None
-
-    @staticmethod
-    def get_coordinates_by_ip() -> tuple[float | None, float | None]:
-        try:
-            response = get(url="https://ipinfo.io/json", timeout=10)
-            response.raise_for_status()
-            data = response.json()
-            latitude, longitude = map(float, data["loc"].split(","))
-            return latitude, longitude
-        except (RequestException, ValueError):
-            return None, None
-
-    @staticmethod
-    def get_timezone(latitude: float, longitude: float) -> timezone:
-        tf = TimezoneFinder()
-        timezone_name = tf.certain_timezone_at(lng=longitude, lat=latitude)
-        if timezone_name is None:
-            raise ValueError("Can't find timezone by given coordinates.")
-        return timezone(timezone_name)
-
-    @staticmethod
-    def get_coordinates() -> tuple[float, float]:
-        latitude, longitude = BrightnessController.get_coordinates_by_ip()
-        if (latitude is not None) and (longitude is not None):
-            BrightnessController.save_coordinates_to_file(
-                latitude, longitude, "coordinates.json"
-            )
-        if (latitude is None) or (longitude is None):
-            latitude, longitude = BrightnessController.load_coordinates_from_file(
-                "coordinates.json"
-            )
-        if (latitude is None) or (longitude is None):
-            windll.user32.MessageBoxW(
-                0,
-                "Error: Unable to determine coordinates.\n\n"
-                "Please check your internet connection or set coordinates manually using --lat and --lng.",
-                "Error",
-                0,
-            )
-            exit(1)
-        return latitude, longitude
-
-    def calculate_base_brightness(
-        self,
-        sunrise: datetime,
-        sunset: datetime,
-        current_time: datetime,
-    ) -> float:
-        day_duration = (sunset - sunrise).total_seconds()
-        night_duration = (24 * 60 * 60) - day_duration
-        brightness_range = self.max - self.min
-
-        change_speed_day = self.change_speed
-        change_speed_night = sqrt(change_speed_day * (day_duration / night_duration))
-
-        if sunrise <= current_time <= sunset:
-            progress = (current_time - sunrise).total_seconds() / day_duration
-            brightness = (
-                self.min
-                + brightness_range * (sin(pi * progress) ** change_speed_day + 1) / 2
-            )
-        else:
-            if current_time > sunset:
-                progress = (current_time - sunset).total_seconds() / night_duration
-            else:
-                progress = (
-                    current_time - sunset + timedelta(days=1)
-                ).total_seconds() / night_duration
-            brightness = (
-                self.max
-                - brightness_range * (sin(pi * progress) ** change_speed_night + 1) / 2
-            )
-        return brightness
 
     @staticmethod
     async def set_brightness_smoothly(
@@ -167,11 +71,43 @@ class BrightnessController:
             windll.user32.MessageBoxW(
                 0,
                 "Error: Supported monitors not found",
-                "Error",
+                "AutoBrightnessControl",
                 0,
             )
             exit(1)
         return supported_monitors.copy()
+
+    def calculate_base_brightness(
+        self,
+        sunrise: datetime,
+        sunset: datetime,
+        current_time: datetime,
+    ) -> float:
+        day_duration = (sunset - sunrise).total_seconds()
+        night_duration = (24 * 60 * 60) - day_duration
+        brightness_range = self.max - self.min
+
+        change_speed_day = self.change_speed
+        change_speed_night = sqrt(change_speed_day * (day_duration / night_duration))
+
+        if sunrise <= current_time <= sunset:
+            progress = (current_time - sunrise).total_seconds() / day_duration
+            brightness = (
+                self.min
+                + brightness_range * (sin(pi * progress) ** change_speed_day + 1) / 2
+            )
+        else:
+            if current_time > sunset:
+                progress = (current_time - sunset).total_seconds() / night_duration
+            else:
+                progress = (
+                    current_time - sunset + timedelta(days=1)
+                ).total_seconds() / night_duration
+            brightness = (
+                self.max
+                - brightness_range * (sin(pi * progress) ** change_speed_night + 1) / 2
+            )
+        return brightness
 
     async def start_brightness_control(
         self,
@@ -181,7 +117,7 @@ class BrightnessController:
         """
         Continuously controls brightness based on sunrise and sunset.
         """
-        time_zone = self.get_timezone(location.latitude, location.longitude)
+        time_zone = get_timezone(location.latitude, location.longitude)
         update_interval = max(0.0, update_interval)
 
         while True:
