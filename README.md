@@ -38,6 +38,8 @@ Full list of arguments:
 
 ```--adapt``` - Enable adaptive brightness (default: False)
 
+```--interval``` - Update interval in seconds (default: 1.0)
+
 ---
 
 ```
@@ -120,8 +122,12 @@ current_brightness = max(
 
 if current_brightness != last_brightness:
     await self.set_brightness_smoothly(
-        last_brightness, current_brightness, 1.0, supported_monitors
+        last_brightness,
+        current_brightness,
+        self.interval / 2,
+        supported_monitors,
     )
+    last_brightness = current_brightness
 ```
 
 ---
