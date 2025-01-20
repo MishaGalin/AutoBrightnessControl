@@ -127,7 +127,6 @@ if current_brightness != last_brightness:
         self.interval / 2,
         supported_monitors,
     )
-    last_brightness = current_brightness
 ```
 
 ---
