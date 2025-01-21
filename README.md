@@ -38,7 +38,7 @@ Full list of arguments:
 
 ```--adapt``` - Enable adaptive brightness (default: False)
 
-```--interval``` - Update interval in seconds (default: 1.0)
+```--interval``` - Update interval in seconds (default: 2.0)
 
 ---
 
@@ -99,10 +99,9 @@ for i in range(max_by_subpixels.shape[0]):
 Taking the average of these maxima and transforming the ranges, we get how much we want to change the brightness relative to the base brightness (the brightness determined by the time of day)
 
 ```
-brightness_addition = float(
-    (np.mean(max_by_subpixels) / 255.0 - 0.5)
-    * brightness_adaptation_range
-)
+brightness_addition = (
+    np.mean(max_by_subpixels) / 255.0 - 0.5
+) * brightness_adaptation_range
 # 0 - 255   to   (-1/4 of brightness range) - (1/4 of brightness range)
 
 self.adapted_brightness = self.base_brightness + brightness_addition
@@ -125,7 +124,6 @@ if current_brightness != last_brightness:
         last_brightness,
         current_brightness,
         self.interval / 2,
-        supported_monitors,
     )
 ```
 
