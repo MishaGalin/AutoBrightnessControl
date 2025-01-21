@@ -28,11 +28,11 @@ class BrightnessController:
         self.interval = max(1 / 60, update_interval)
         self.base_brightness = 0.0
         self.adapted_brightness = 0.0
-        self.task_queue = (
+        self.task_queue = [
             "control",
             "adaptation",
             "update",
-        )
+        ]
         self.current_task = 0
 
     @staticmethod
@@ -69,9 +69,11 @@ class BrightnessController:
             await asyncio.sleep(max(0.0, anim_step_duration - anim_step_elapsed_time))
 
     @staticmethod
-    def get_supported_monitors(all_monitors: list[str]) -> list[str]:
+    def get_supported_monitors(monitors: list[str] = None) -> list[str]:
         supported_monitors = []
-        for monitor in all_monitors:
+        if monitors is None:
+            monitors = sbc.list_monitors()
+        for monitor in monitors:
             try:
                 sbc.get_brightness(display=monitor)
                 supported_monitors.append(monitor)
@@ -85,7 +87,7 @@ class BrightnessController:
                 0,
             )
             exit(1)
-        return supported_monitors.copy()
+        return supported_monitors
 
     def calculate_base_brightness(
         self,
@@ -242,14 +244,13 @@ class BrightnessController:
         tasks = []
 
         if not self.adaptive_brightness:
-            self.task_queue = tuple(filter(lambda x: x != "adaptation", self.task_queue))
-
+            self.task_queue.remove("adaptation")
         for task in self.task_queue:
             if task == "control":
                 tasks.append(
                     asyncio.create_task(self.start_brightness_control(location))
                 )
-            elif task == "adaptation" and self.adaptive_brightness:
+            elif task == "adaptation":
                 tasks.append(asyncio.create_task(self.start_brightness_adaptation()))
             elif task == "update":
                 tasks.append(asyncio.create_task(self.start_brightness_update()))
