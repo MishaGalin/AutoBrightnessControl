@@ -217,13 +217,16 @@ class BrightnessController:
         """
         Continuously updates the brightness of the display.
         """
+        last_brightness = sbc.get_brightness(display=self.supported_monitors[0])[0]
         while True:
             if self.task_queue[self.current_task] != "update":
                 await asyncio.sleep(self.interval / 4)
                 continue
             start_time = time()
-            self.update_monitor_list()
-
+            if self.update_monitor_list():
+                last_brightness = sbc.get_brightness(
+                    display=self.supported_monitors[0]
+                )[0]
             if self.adaptive_brightness:
                 current_brightness = round(self.adapted_brightness)
             else:
@@ -233,13 +236,13 @@ class BrightnessController:
                 min(self.max, current_brightness),
             )
 
-            last_brightness = sbc.get_brightness(display=self.supported_monitors[0])[0]
             if current_brightness != last_brightness:
                 await self.set_brightness_smoothly(
                     last_brightness,
                     current_brightness,
                     self.interval / 2,
                 )
+                last_brightness = current_brightness
             self.current_task = (self.current_task + 1) % len(self.task_queue)
             end_time = time()
             elapsed_time = end_time - start_time
