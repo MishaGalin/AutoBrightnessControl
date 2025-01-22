@@ -81,7 +81,7 @@ Next, only a very small part of the pixels is taken from the full screenshot
 ```
 pixel_density = 60
 divider = round(screenshot.shape[0] / pixel_density)
-pixels = screenshot[divider::divider, divider::divider]
+pixels = screenshot[divider:-divider:divider, divider:-divider:divider]
 ```
 
 We go through each pixel and take the maximum along its subpixels, so that, for example, pixel (0, 0, 255) is equivalent to pixel (255, 255, 255)
