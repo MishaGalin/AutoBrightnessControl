@@ -1,5 +1,6 @@
 from json import dump, load
 from os import path
+from sys import exit
 from requests import get, RequestException
 from pytz import timezone
 from timezonefinder import TimezoneFinder
@@ -41,11 +42,12 @@ def get_timezone(latitude: float, longitude: float) -> timezone:
 
 
 def get_coordinates() -> tuple[float, float]:
+    file_name = "coordinates.json"
     latitude, longitude = get_coordinates_by_ip()
     if (latitude is not None) and (longitude is not None):
-        save_coordinates_to_file(latitude, longitude, "../coordinates.json")
+        save_coordinates_to_file(latitude, longitude, file_name)
     if (latitude is None) or (longitude is None):
-        latitude, longitude = load_coordinates_from_file("coordinates.json")
+        latitude, longitude = load_coordinates_from_file(file_name)
     if (latitude is None) or (longitude is None):
         windll.user32.MessageBoxW(
             0,
