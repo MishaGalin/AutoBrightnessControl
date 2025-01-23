@@ -149,14 +149,6 @@ class BrightnessController:
                 supported_monitors.append(monitor)
             except sbc.exceptions.ScreenBrightnessError:
                 continue
-        if len(supported_monitors) == 0:
-            windll.user32.MessageBoxW(
-                0,
-                "Error: Supported monitors not found",
-                "AutoBrightnessControl",
-                0,
-            )
-            exit(1)
         return supported_monitors
 
     def update_monitor_list(self) -> bool:
@@ -168,6 +160,14 @@ class BrightnessController:
         if self._all_monitors != new_all_monitors:
             self._all_monitors = new_all_monitors
             self._supported_monitors = self.get_supported_monitors(self._all_monitors)
+            if len(self._supported_monitors) == 0:
+                windll.user32.MessageBoxW(
+                    0,
+                    "Error: Supported monitors not found",
+                    "AutoBrightnessControl",
+                    0,
+                )
+                exit(1)
             return True
         return False
 
