@@ -190,7 +190,7 @@ class BrightnessController:
             if screenshot is not None:
                 pixel_density = 60
                 divider = round(screenshot.shape[0] / pixel_density)
-                pixels = screenshot[divider::divider, divider::divider]
+                pixels = screenshot[divider:-divider:divider, divider:-divider:divider]
                 # Get a sub-matrix of pixels with a step of 'divider' excluding the edges
 
                 max_by_subpixels = np.empty(
@@ -256,13 +256,11 @@ class BrightnessController:
 
         if not self.adaptive_brightness:
             self.task_queue.remove("adaptation")
-        for task in self.task_queue:
-            if task == "control":
-                tasks.append(
-                    asyncio.create_task(self.brightness_control_task(location))
-                )
-            elif task == "adaptation":
-                tasks.append(asyncio.create_task(self.brightness_adaptation_task()))
-            elif task == "update":
-                tasks.append(asyncio.create_task(self.brightness_update_task()))
-        await asyncio.gather(*tasks)
+        async with asyncio.TaskGroup() as tg:
+            for task in self.task_queue:
+                if task == "control":
+                    tasks.append(tg.create_task(self.brightness_control_task(location)))
+                elif task == "adaptation":
+                    tasks.append(tg.create_task(self.brightness_adaptation_task()))
+                elif task == "update":
+                    tasks.append(tg.create_task(self.brightness_update_task()))
