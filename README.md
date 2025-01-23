@@ -70,7 +70,7 @@ First, we define a brightness adaptation range equal to half the brightness rang
 brightness_adaptation_range = (self.max - self.min) / 2
 ```
 
-Every period of time, the program takes a screenshot of your screen
+Every period of time, the program takes a screenshot of your screen. It is not saved on disk, but only stored in RAM until a new screenshot is taken.
 
 ```
 screenshot = camera.grab()
