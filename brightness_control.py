@@ -24,23 +24,23 @@ async def main():
     parser.add_argument("--interval", type=float, default=default_update_interval)
     args = parser.parse_args()
 
-    brightness_min = args.min
-    brightness_max = args.max
+    min_brightness = args.min
+    max_brightness = args.max
     change_speed = args.speed
     latitude = args.lat
     longitude = args.lng
     adaptive_brightness = args.adapt
     update_interval = args.interval
 
-    if not (0 <= brightness_min <= 100):
+    if not (0 <= min_brightness <= 100):
         raise ValueError("Minimum brightness must be between 0 and 100.")
-    if not (0 <= brightness_max <= 100):
+    if not (0 <= max_brightness <= 100):
         raise ValueError("Maximum brightness must be between 0 and 100.")
-    if not (brightness_min < brightness_max):
+    if min_brightness >= max_brightness:
         raise ValueError("Minimum brightness must be less than maximum brightness.")
     controller = BrightnessController(
-        brightness_min,
-        brightness_max,
+        min_brightness,
+        max_brightness,
         change_speed,
         adaptive_brightness,
         update_interval,

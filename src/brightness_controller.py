@@ -15,14 +15,14 @@ import screen_brightness_control as sbc
 class BrightnessController:
     def __init__(
         self,
-        brightness_min: int,
-        brightness_max: int,
+        min_brightness: int,
+        max_brightness: int,
         change_speed: float,
         adaptive_brightness: bool,
         update_interval: float,
     ) -> None:
-        self._min = brightness_min
-        self._max = brightness_max
+        self._min = min_brightness
+        self._max = max_brightness
         self.change_speed = change_speed
         self._is_adaptive = adaptive_brightness
         self._interval = update_interval
@@ -103,6 +103,16 @@ class BrightnessController:
     def supported_monitors(self):
         return self._supported_monitors
 
+    async def wait_for_task(self, task: str) -> None:
+        while self._task_queue[self._current_task] != task:
+            await asyncio.sleep(self._interval / 4)
+
+    def switch_to_next_task(self) -> None:
+        self._current_task = (self._current_task + 1) % len(self._task_queue)
+
+    async def sleep_with_min_interval(self, elapsed_time: float) -> None:
+        await asyncio.sleep(max(self._interval / 4, self._interval - elapsed_time))
+
     async def set_brightness_smoothly(
         self,
         start_brightness: int,
@@ -140,6 +150,10 @@ class BrightnessController:
 
     @staticmethod
     def get_supported_monitors(monitors: list[str] = None) -> list[str]:
+        """
+        Returns a list of supported monitors from a list of given monitors.
+        If monitors is None, the list of all monitors will be used.
+        """
         supported_monitors = []
         if monitors is None:
             monitors = sbc.list_monitors()
@@ -160,7 +174,7 @@ class BrightnessController:
         if self._all_monitors != new_all_monitors:
             self._all_monitors = new_all_monitors
             self._supported_monitors = self.get_supported_monitors(self._all_monitors)
-            if len(self._supported_monitors) == 0:
+            if not self._supported_monitors:
                 windll.user32.MessageBoxW(
                     0,
                     "Error: Supported monitors not found",
@@ -214,9 +228,7 @@ class BrightnessController:
 
         while True:
             start_time = time()
-            if self._task_queue[self._current_task] != "control":
-                await asyncio.sleep(self._interval / 4)
-                continue
+            await self.wait_for_task("control")
             current_time = datetime.now(time_zone)
 
             sun_data = sun(
@@ -230,10 +242,10 @@ class BrightnessController:
                 current_time,
             )
 
-            self._current_task = (self._current_task + 1) % len(self._task_queue)
+            self.switch_to_next_task()
             end_time = time()
             elapsed_time = end_time - start_time
-            await asyncio.sleep(max(self._interval / 4, self._interval - elapsed_time))
+            await self.sleep_with_min_interval(elapsed_time)
 
     async def brightness_adaptation_task(self) -> None:
         """
@@ -244,9 +256,7 @@ class BrightnessController:
 
         while True:
             start_time = time()
-            if self._task_queue[self._current_task] != "adaptation":
-                await asyncio.sleep(self._interval / 4)
-                continue
+            await self.wait_for_task("adaptation")
             if self.update_monitor_list():
                 del camera
                 camera = dxcam.create()
@@ -258,23 +268,17 @@ class BrightnessController:
                 pixels = screenshot[divider:-divider:divider, divider:-divider:divider]
                 # Get a sub-matrix of pixels with a step of 'divider' excluding the edges
 
-                max_by_subpixels = np.empty(
-                    shape=(pixels.shape[0], pixels.shape[1]), dtype=np.uint8
-                )
-
-                for i in range(max_by_subpixels.shape[0]):
-                    for j in range(max_by_subpixels.shape[1]):
-                        max_by_subpixels[i][j] = max(pixels[i][j])
+                max_by_subpixels = np.max(pixels, axis=2)
                 brightness_addition = (
                     np.mean(max_by_subpixels) / 255.0 - 0.5
                 ) * brightness_adaptation_range
                 # 0 - 255   to   (-1/4 of brightness range) - (1/4 of brightness range)
 
                 self._adapted_brightness = self._base_brightness + brightness_addition
-            self._current_task = (self._current_task + 1) % len(self._task_queue)
+            self.switch_to_next_task()
             end_time = time()
             elapsed_time = end_time - start_time
-            await asyncio.sleep(max(self._interval / 4, self._interval - elapsed_time))
+            await self.sleep_with_min_interval(elapsed_time)
 
     async def brightness_update_task(
         self,
@@ -285,9 +289,7 @@ class BrightnessController:
         last_brightness = sbc.get_brightness(display=self._supported_monitors[0])[0]
         while True:
             start_time = time()
-            if self._task_queue[self._current_task] != "update":
-                await asyncio.sleep(self._interval / 4)
-                continue
+            await self.wait_for_task("update")
             if self.update_monitor_list():
                 last_brightness = sbc.get_brightness(
                     display=self._supported_monitors[0]
@@ -308,10 +310,10 @@ class BrightnessController:
                     self._interval / 2,
                 )
                 last_brightness = current_brightness
-            self._current_task = (self._current_task + 1) % len(self._task_queue)
+            self.switch_to_next_task()
             end_time = time()
             elapsed_time = end_time - start_time
-            await asyncio.sleep(max(self._interval / 4, self._interval - elapsed_time))
+            await self.sleep_with_min_interval(elapsed_time)
 
     async def start_main_loop(self, location: LocationInfo) -> None:
         """
