@@ -75,7 +75,7 @@ class BrightnessController:
 
     @interval.setter
     def interval(self, value: float):
-        if value < 0:
+        if value <= 0:
             raise ValueError("interval must be greater than 0")
         self._interval = value
 
@@ -112,40 +112,38 @@ class BrightnessController:
     def switch_to_next_task(self) -> None:
         self._current_task = (self._current_task + 1) % len(self._task_queue)
 
-    async def sleep_with_min_interval(self, elapsed_time: float) -> None:
-        await asyncio.sleep(max(self._interval / 4, self._interval - elapsed_time))
+    def set_brightness(self, brightness: int, monitors: list[str] = None) -> None:
+        if monitors is None:
+            monitors = self._supported_monitors
+        for monitor in monitors:
+            sbc.set_brightness(brightness, display=monitor)
 
     async def set_brightness_smoothly(
         self,
         start_brightness: int,
         end_brightness: int,
-        animation_duration: float,
+        duration: float,
         monitors: list[str] = None,
     ) -> None:
-        if start_brightness == end_brightness or animation_duration < 0.001:
-            sbc.set_brightness(end_brightness)
-            return
         if monitors is None:
             monitors = self._supported_monitors
-        anim_step_duration = animation_duration / abs(end_brightness - start_brightness)
-        last_brightness = start_brightness
+        if start_brightness == end_brightness or duration < 0.001:
+            self.set_brightness(end_brightness, monitors)
+            return
+        brightness_range = end_brightness - start_brightness
+        anim_step_duration = duration / abs(brightness_range)
         start_time = time() - anim_step_duration
 
         while True:
             anim_step_start_time = time()
             if self.update_monitor_list():
                 return
-            progress = (anim_step_start_time - start_time) / animation_duration
-            current_brightness = round(
-                start_brightness + progress * (end_brightness - start_brightness)
-            )
+            progress = (anim_step_start_time - start_time) / duration
+            current_brightness = round(start_brightness + progress * brightness_range)
             if progress >= 1.0 or current_brightness == end_brightness:
-                sbc.set_brightness(end_brightness)
-                break
-            if current_brightness != last_brightness:
-                for monitor in monitors:
-                    sbc.set_brightness(current_brightness, display=monitor)
-                last_brightness = current_brightness
+                self.set_brightness(end_brightness, monitors)
+                return
+            self.set_brightness(current_brightness, monitors)
             anim_step_end_time = time()
             anim_step_elapsed_time = anim_step_end_time - anim_step_start_time
             await asyncio.sleep(max(0.0, anim_step_duration - anim_step_elapsed_time))
@@ -247,7 +245,7 @@ class BrightnessController:
             self.switch_to_next_task()
             end_time = time()
             elapsed_time = end_time - start_time
-            await self.sleep_with_min_interval(elapsed_time)
+            await asyncio.sleep(max(self.interval / 4, self.interval - elapsed_time))
 
     async def brightness_adaptation_task(self) -> None:
         """
@@ -280,7 +278,7 @@ class BrightnessController:
             self.switch_to_next_task()
             end_time = time()
             elapsed_time = end_time - start_time
-            await self.sleep_with_min_interval(elapsed_time)
+            await asyncio.sleep(max(self.interval / 4, self.interval - elapsed_time))
 
     async def brightness_update_task(
         self,
@@ -315,7 +313,7 @@ class BrightnessController:
             self.switch_to_next_task()
             end_time = time()
             elapsed_time = end_time - start_time
-            await self.sleep_with_min_interval(elapsed_time)
+            await asyncio.sleep(max(self.interval / 4, self.interval - elapsed_time))
 
     async def start_main_loop(self, location: LocationInfo) -> None:
         """
