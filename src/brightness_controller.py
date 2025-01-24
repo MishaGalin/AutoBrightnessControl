@@ -104,6 +104,8 @@ class BrightnessController:
         return self._supported_monitors
 
     async def wait_for_task(self, task: str) -> None:
+        if task not in self._task_queue:
+            raise ValueError(f"Task {task} not found in task queue")
         while self._task_queue[self._current_task] != task:
             await asyncio.sleep(self._interval / 4)
 
@@ -227,8 +229,8 @@ class BrightnessController:
         time_zone = get_timezone(location.latitude, location.longitude)
 
         while True:
-            start_time = time()
             await self.wait_for_task("control")
+            start_time = time()
             current_time = datetime.now(time_zone)
 
             sun_data = sun(
@@ -255,8 +257,8 @@ class BrightnessController:
         brightness_adaptation_range = (self._max - self._min) / 2
 
         while True:
-            start_time = time()
             await self.wait_for_task("adaptation")
+            start_time = time()
             if self.update_monitor_list():
                 del camera
                 camera = dxcam.create()
@@ -288,8 +290,8 @@ class BrightnessController:
         """
         last_brightness = sbc.get_brightness(display=self._supported_monitors[0])[0]
         while True:
-            start_time = time()
             await self.wait_for_task("update")
+            start_time = time()
             if self.update_monitor_list():
                 last_brightness = sbc.get_brightness(
                     display=self._supported_monitors[0]
