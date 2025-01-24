@@ -245,7 +245,7 @@ class BrightnessController:
             self.switch_to_next_task()
             end_time = time()
             elapsed_time = end_time - start_time
-            await asyncio.sleep(max(self.interval / 4, self.interval - elapsed_time))
+            await asyncio.sleep(max(self._interval / 4, self._interval - elapsed_time))
 
     async def brightness_adaptation_task(self) -> None:
         """
@@ -278,7 +278,7 @@ class BrightnessController:
             self.switch_to_next_task()
             end_time = time()
             elapsed_time = end_time - start_time
-            await asyncio.sleep(max(self.interval / 4, self.interval - elapsed_time))
+            await asyncio.sleep(max(self._interval / 4, self._interval - elapsed_time))
 
     async def brightness_update_task(
         self,
@@ -294,10 +294,9 @@ class BrightnessController:
                 last_brightness = sbc.get_brightness(
                     display=self._supported_monitors[0]
                 )[0]
-            if self._is_adaptive:
-                current_brightness = round(self._adapted_brightness)
-            else:
-                current_brightness = round(self._base_brightness)
+            current_brightness = round(
+                self._adapted_brightness if self._is_adaptive else self._base_brightness
+            )
             current_brightness = max(
                 self._min,
                 min(self._max, current_brightness),
@@ -313,7 +312,7 @@ class BrightnessController:
             self.switch_to_next_task()
             end_time = time()
             elapsed_time = end_time - start_time
-            await asyncio.sleep(max(self.interval / 4, self.interval - elapsed_time))
+            await asyncio.sleep(max(self._interval / 4, self._interval - elapsed_time))
 
     async def start_main_loop(self, location: LocationInfo) -> None:
         """
