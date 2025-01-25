@@ -280,7 +280,6 @@ class BrightnessController:
             self.switch_to_next_task()
             end_time = time()
             elapsed_time = end_time - start_time
-            print(f"elapsed time: {elapsed_time}")
             await asyncio.sleep(max(self._interval / 4, self._interval - elapsed_time))
 
     async def brightness_update_task(
