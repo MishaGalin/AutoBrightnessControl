@@ -265,10 +265,12 @@ class BrightnessController:
             if screenshot is not None:
                 pixel_density = 60
                 divider = round(screenshot.shape[0] / pixel_density)
-                pixels = screenshot[divider:-divider:divider, divider:-divider:divider]
                 # Get a sub-matrix of pixels with a step of 'divider' excluding the edges
 
-                max_by_subpixels = np.max(pixels, axis=2)
+                max_by_subpixels = np.max(
+                    screenshot[divider:-divider:divider, divider:-divider:divider],
+                    axis=2,
+                )
                 brightness_addition = (
                     np.mean(max_by_subpixels) / 255.0 - 0.5
                 ) * brightness_adaptation_range
@@ -278,6 +280,7 @@ class BrightnessController:
             self.switch_to_next_task()
             end_time = time()
             elapsed_time = end_time - start_time
+            print(f"elapsed time: {elapsed_time}")
             await asyncio.sleep(max(self._interval / 4, self._interval - elapsed_time))
 
     async def brightness_update_task(
