@@ -2,7 +2,7 @@ from ctypes import windll
 from time import time
 from sys import exit
 from math import sin, pi, sqrt
-from datetime import datetime, timedelta, tzinfo
+from datetime import datetime, timedelta
 from astral.sun import sun
 from astral import LocationInfo
 import dxcam
