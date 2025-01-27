@@ -2,10 +2,9 @@ from ctypes import windll
 from time import time
 from sys import exit
 from math import sin, pi, sqrt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, tzinfo
 from astral.sun import sun
 from astral import LocationInfo
-from src.location import get_timezone
 import dxcam
 import numpy as np
 import asyncio
@@ -224,15 +223,13 @@ class BrightnessController:
         """
         Continuously controls brightness based on sunrise and sunset.
         """
-        time_zone = get_timezone(location.latitude, location.longitude)
-
         while True:
             await self.wait_for_task("control")
             start_time = time()
-            current_time = datetime.now(time_zone)
+            current_time = datetime.now(location.timezone)
 
             sun_data = sun(
-                location.observer, date=current_time.date(), tzinfo=time_zone
+                location.observer, date=current_time.date(), tzinfo=location.timezone
             )
             sunrise, sunset = sun_data["sunrise"], sun_data["sunset"]
 
@@ -264,11 +261,11 @@ class BrightnessController:
 
             if screenshot is not None:
                 pixel_density = 60
-                divider = round(screenshot.shape[0] / pixel_density)
-                # Get a sub-matrix of pixels with a step of 'divider' excluding the edges
+                div = round(screenshot.shape[0] / pixel_density)
+                # Get a sub-matrix of pixels with a step of 'div' excluding the edges
 
                 max_by_subpixels = np.max(
-                    screenshot[divider:-divider:divider, divider:-divider:divider],
+                    screenshot[div:-div:div, div:-div:div],
                     axis=2,
                 )
                 brightness_addition = (

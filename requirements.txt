@@ -1,7 +1,6 @@
 requests
 pytz
 astral
-timezonefinder
 dxcam
 numpy
 screen-brightness-control

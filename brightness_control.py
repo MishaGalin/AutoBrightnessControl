@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from astral import LocationInfo
 from src.brightness_controller import BrightnessController
-from src.location import get_coordinates
+from src.location import get_coordinates, get_timezone_by_ip
 import asyncio
 
 
@@ -48,7 +48,8 @@ async def main():
 
     if latitude is None or longitude is None:
         latitude, longitude = get_coordinates()
-    location = LocationInfo(latitude=latitude, longitude=longitude)
+    timezone = get_timezone_by_ip()
+    location = LocationInfo(timezone=timezone, latitude=latitude, longitude=longitude)
 
     await controller.start_main_loop(location)
 

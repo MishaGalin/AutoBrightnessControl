@@ -3,7 +3,6 @@ from os import path
 from sys import exit
 from requests import get, RequestException
 from pytz import timezone
-from timezonefinder import TimezoneFinder
 from ctypes import windll
 
 
@@ -33,12 +32,14 @@ def get_coordinates_by_ip() -> tuple[float | None, float | None]:
         return None, None
 
 
-def get_timezone(latitude: float, longitude: float) -> timezone:
-    tf = TimezoneFinder()
-    timezone_name = tf.certain_timezone_at(lng=longitude, lat=latitude)
-    if timezone_name is None:
-        raise ValueError("Can't find timezone by given coordinates.")
-    return timezone(timezone_name)
+def get_timezone_by_ip() -> timezone:
+    try:
+        response = get(url="https://ipinfo.io/json", timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        return timezone(data["timezone"])
+    except (RequestException, ValueError):
+        return timezone("UTC")
 
 
 def get_coordinates() -> tuple[float, float]:
