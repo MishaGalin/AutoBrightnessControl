@@ -16,11 +16,13 @@ All you have to do is to run ```AutoBrightnessControl.exe``` (unless you want to
 
 You can also create a task in Windows Task Manager to have this app autorun on startup with desired arguments using ```create_task.bat``` (run as administrator) if it is in the same folder as ```AutoBrightnessControl.exe```.
 
-![Screenshot_34](https://github.com/user-attachments/assets/f443c976-2ccb-4e1a-8494-9b65a1324d61)
+![Screenshot_46](https://github.com/user-attachments/assets/eca81afc-cd2f-45ee-96a2-e526d4d4be4c)
 
 Latitude, longitude and time zone are determined by your IP address using https://ipinfo.io/json so it would be determined incorrectly if you are using a VPN when the app launches.
 
-To close the application, end the task in Task Manager. And make sure you are not running multiple instances of the app at once especially with different arguments, otherwise they will constantly reset brightness, causing flickering.
+To close the application, end the task in Task Manager. 
+
+Launching a new instance of the application will close all existing ones so there will be no brightness control conflicts.
 
 You can get your coordinates on this website: https://www.latlong.net/
 
