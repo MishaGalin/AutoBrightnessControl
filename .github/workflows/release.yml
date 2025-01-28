@@ -26,16 +26,25 @@ jobs:
           pip install pyinstaller
           pyinstaller --onefile --noconsole --icon=icon32.ico --name=AutoBrightnessControl brightness_control.py
 
+      - name: Create release folder
+        run: |
+          mkdir release
+          copy dist\AutoBrightnessControl.exe release\
+          copy create_task.bat release\
+
+      - name: Create ZIP archive
+        run: |
+          Compress-Archive -Path release\* -DestinationPath AutoBrightnessControl.zip
+      
       - name: Create Release and Upload Files
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: 1.3.11.13
+          tag: 1.3.11.15
           name: "AutoBrightnessControl v1.3.11"
           body: "The main change in version 1.3.x was adaptive brightness change depending on the content on the screen. I understand that not everyone needs such a feature, that's why there is an argument --adapt.\n\nNow the application works correctly with both monitors that support brightness control and those that do not."
           draft: false
           prerelease: false
           makeLatest: true
           artifacts: |
-            dist/brightness_control.exe
-            create_task.bat
+            AutoBrightnessControl.zip
