@@ -26,6 +26,16 @@ jobs:
           pip install pyinstaller
           pyinstaller --onefile --noconsole --icon=icon32.ico --name=AutoBrightnessControl brightness_control.py
 
+      - name: Create release folder
+        run: |
+          mkdir release
+          copy dist\AutoBrightnessControl.exe release\
+          copy create_task.bat release\
+
+      - name: Create ZIP archive
+        run: |
+          Compress-Archive -Path release\* -DestinationPath AutoBrightnessControl.zip
+      
       - name: Create Release and Upload Files
         uses: ncipollo/release-action@v1
         with:
@@ -37,5 +47,4 @@ jobs:
           prerelease: false
           makeLatest: true
           artifacts: |
-            dist/AutoBrightnessControl.exe
-            create_task.bat
+            AutoBrightnessControl.zip
