@@ -31,6 +31,7 @@ jobs:
           mkdir release
           copy dist\AutoBrightnessControl.exe release\
           copy create_task.bat release\
+          copy remove_task.bat release\
 
       - name: Create ZIP archive
         run: |
