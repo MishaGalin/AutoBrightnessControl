@@ -12,9 +12,9 @@ pip install -r requirements.txt
 
 # How to use
 
-All you have to do is to run ```brightness_control.exe``` (unless you want to change something with arguments). You don't need to have python interpreter or any python libraries installed. Also, one of the main goals was to keep the application's load on the system almost zero.
+All you have to do is to run ```AutoBrightnessControl.exe``` (unless you want to change something with arguments). You don't need to have python interpreter or any python libraries installed. Also, one of the main goals was to keep the application's load on the system almost zero.
 
-You can also create a task in Windows Task Manager to have this app autorun on startup with desired arguments using ```create_task.bat``` (run as administrator) if it is in the same folder as ```brightness_control.exe```.
+You can also create a task in Windows Task Manager to have this app autorun on startup with desired arguments using ```create_task.bat``` (run as administrator) if it is in the same folder as ```AutoBrightnessControl.exe```.
 
 ![Screenshot_34](https://github.com/user-attachments/assets/f443c976-2ccb-4e1a-8494-9b65a1324d61)
 
