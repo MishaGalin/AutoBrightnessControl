@@ -20,7 +20,9 @@ You can also create a task in Windows Task Manager to have this app autorun on s
 
 Latitude, longitude and time zone are determined by your IP address using https://ipinfo.io/json so it would be determined incorrectly if you are using a VPN when the app launches.
 
-To close the application, end the task in Task Manager. Launching a new instance of the application will close all existing ones so that there will be no brightness control conflicts.
+To close the application, end the task in Task Manager. 
+
+Launching a new instance of the application will close all existing ones so there will be no brightness control conflicts.
 
 You can get your coordinates on this website: https://www.latlong.net/
 
