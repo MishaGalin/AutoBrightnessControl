@@ -24,7 +24,7 @@ jobs:
       - name: Build executable
         run: |
           pip install pyinstaller
-          pyinstaller --onefile --noconsole --icon=icon32.png --name=AutoBrightnessControl brightness_control.py
+          pyinstaller --onefile --noconsole --icon=icon32.ico --name=AutoBrightnessControl brightness_control.py
 
       - name: Create Release and Upload Files
         uses: ncipollo/release-action@v1
