@@ -2,10 +2,28 @@ from argparse import ArgumentParser
 from astral import LocationInfo
 from src.brightness_controller import BrightnessController
 from src.location import get_coordinates, get_timezone_by_ip
+import os
+import psutil
 import asyncio
+
+PROCESS_NAME = "AutoBrightnessControl.exe"
+
+
+def kill_existing_instances():
+    """
+    Closes any existing instances of the program.
+    """
+    for proc in psutil.process_iter(["pid", "name"]):
+        try:
+            if proc.info["name"] == PROCESS_NAME and proc.pid != os.getpid():
+                proc.kill()
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
 
 
 async def main():
+    kill_existing_instances()
+
     default_min_brightness = 20
     default_max_brightness = 70
     default_change_speed = 1.0

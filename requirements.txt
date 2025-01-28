@@ -4,3 +4,4 @@ astral
 dxcam
 numpy
 screen-brightness-control
+psutil
