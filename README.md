@@ -18,7 +18,7 @@ You can also create a task in Windows Task Manager to have this app autorun on s
 
 ![Screenshot_34](https://github.com/user-attachments/assets/f443c976-2ccb-4e1a-8494-9b65a1324d61)
 
-Latitude and longitude are determined by your IP address using https://ipinfo.io/json so it would be determined incorrectly if you are using a VPN when the app launches.
+Latitude, longitude and time zone are determined by your IP address using https://ipinfo.io/json so it would be determined incorrectly if you are using a VPN when the app launches.
 
 To close the application, end the task in Task Manager. And make sure you are not running multiple instances of the app at once especially with different arguments, otherwise they will constantly reset brightness, causing flickering.
 
