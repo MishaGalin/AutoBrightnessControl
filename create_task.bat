@@ -29,7 +29,7 @@ if %errorlevel% equ 0 (
     echo Running the created task now...
     schtasks /run /tn "%taskName%"
 ) else (
-    echo Error while creating the task.
+    echo Error while creating the task. Try running with administrator rights.
 )
 
 pause
