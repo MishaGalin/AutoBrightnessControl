@@ -1,6 +1,5 @@
 from ctypes import windll
 from time import time
-from sys import exit
 from math import sin, pi, sqrt
 from datetime import datetime, timedelta
 from astral.sun import sun
@@ -35,6 +34,7 @@ class BrightnessController:
         self._current_task = 0
         self._all_monitors = []
         self._supported_monitors = []
+        self.__paused = False
 
         self.update_monitor_list()
         if not self._is_adaptive:
@@ -111,6 +111,22 @@ class BrightnessController:
     def switch_to_next_task(self) -> None:
         self._current_task = (self._current_task + 1) % len(self._task_queue)
 
+    def pause_main_loop(self) -> None:
+        """
+        Pauses the main loop of the brightness controller.
+        """
+        self.__paused = True
+
+    def unpause_main_loop(self) -> None:
+        """
+        Unpauses the main loop of the brightness controller.
+        """
+        self.__paused = False
+
+    async def wait_for_unpause(self) -> None:
+        while self.__paused:
+            await asyncio.sleep(1.0)
+
     def set_brightness(self, brightness: int, monitors: list[str] = None) -> None:
         if monitors is None:
             monitors = self._supported_monitors
@@ -176,11 +192,11 @@ class BrightnessController:
             if not self._supported_monitors:
                 windll.user32.MessageBoxW(
                     0,
-                    "Error: Supported monitors not found",
+                    "Error: No supported monitors found",
                     "AutoBrightnessControl",
                     0,
                 )
-                exit(1)
+                raise RuntimeError("No supported monitors found")
             return True
         return False
 
@@ -225,6 +241,7 @@ class BrightnessController:
         """
         while True:
             await self.wait_for_task("control")
+            await self.wait_for_unpause()
             start_time = time()
             current_time = datetime.now(location.timezone)
 
@@ -249,25 +266,28 @@ class BrightnessController:
         Continuously adapts brightness based on content on the screen.
         """
         camera = dxcam.create()
+        pixel_density = 60
+        div = round(camera.height / pixel_density)
         brightness_adaptation_range = (self._max - self._min) / 2
 
         while True:
             await self.wait_for_task("adaptation")
+            await self.wait_for_unpause()
             start_time = time()
             if self.update_monitor_list():
                 del camera
                 camera = dxcam.create()
+                div = round(camera.height / pixel_density)
             screenshot = camera.grab()
 
             if screenshot is not None:
-                pixel_density = 60
-                div = round(screenshot.shape[0] / pixel_density)
-                # Get a sub-matrix of pixels with a step of 'div' excluding the edges
-
                 max_by_subpixels = np.max(
                     screenshot[div:-div:div, div:-div:div],
                     axis=2,
                 )
+                # Get a sub-matrix of pixels with a step of 'div' excluding the edges
+                # and then find a subpixel with the highest color value in each pixel
+
                 brightness_addition = (
                     np.mean(max_by_subpixels) / 255.0 - 0.5
                 ) * brightness_adaptation_range
@@ -288,6 +308,7 @@ class BrightnessController:
         last_brightness = sbc.get_brightness(display=self._supported_monitors[0])[0]
         while True:
             await self.wait_for_task("update")
+            await self.wait_for_unpause()
             start_time = time()
             if self.update_monitor_list():
                 last_brightness = sbc.get_brightness(

@@ -1,4 +1,5 @@
 coordinates.json
+timezone.json
 
 
 # Created by .ignore support plugin (hsz.mobi)
@@ -187,5 +188,4 @@ fabric.properties
 
 # idea folder, uncomment if you don't need it
 .idea
-/change_speed_night = change_speed_d.txt
-/Без имени.png
+

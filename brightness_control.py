@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from astral import LocationInfo
 from src.brightness_controller import BrightnessController
-from src.location import get_coordinates, get_timezone_by_ip
+from src.location import get_and_save_coordinates, get_and_save_timezone
 import os
 import psutil
 import asyncio
@@ -51,11 +51,13 @@ async def main():
     update_interval = args.interval
 
     if not (0 <= min_brightness <= 100):
-        raise ValueError("Minimum brightness must be between 0 and 100.")
+        raise ValueError("Minimum brightness must be between 0 and 100")
     if not (0 <= max_brightness <= 100):
-        raise ValueError("Maximum brightness must be between 0 and 100.")
+        raise ValueError("Maximum brightness must be between 0 and 100")
     if min_brightness >= max_brightness:
-        raise ValueError("Minimum brightness must be less than maximum brightness.")
+        raise ValueError("Minimum brightness must be less than maximum brightness")
+    if update_interval <= 0:
+        raise ValueError("Update interval must be greater than 0")
     controller = BrightnessController(
         min_brightness,
         max_brightness,
@@ -65,8 +67,8 @@ async def main():
     )
 
     if latitude is None or longitude is None:
-        latitude, longitude = get_coordinates()
-    timezone = get_timezone_by_ip()
+        latitude, longitude = get_and_save_coordinates()
+    timezone = get_and_save_timezone()
     location = LocationInfo(timezone=timezone, latitude=latitude, longitude=longitude)
 
     await controller.start_main_loop(location)
