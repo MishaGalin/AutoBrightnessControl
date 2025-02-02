@@ -13,28 +13,33 @@ import screen_brightness_control as sbc
 class BrightnessController:
     def __init__(
         self,
-        min_brightness: int,
-        max_brightness: int,
-        change_speed: float,
-        adaptive_brightness: bool,
-        update_interval: float,
+        min_brightness: int = 20,
+        max_brightness: int = 70,
+        change_speed: float = 1.0,
+        adaptive_brightness: bool = False,
+        update_interval: float = 2.0,
     ) -> None:
         self._min = min_brightness
         self._max = max_brightness
         self.change_speed = change_speed
         self._is_adaptive = adaptive_brightness
         self._interval = update_interval
+
         self._base_brightness = 0.0
         self._adapted_brightness = 0.0
         self._task_queue = [
+            "monitor_list",
             "control",
             "adaptation",
             "update",
+            "sleep",
         ]
         self._current_task = 0
         self._all_monitors = []
         self._supported_monitors = []
-        self.__paused = False
+        self._monitor_list_updated = False
+        self.paused = False
+        self.__sum_elapsed_time = 0.0
 
         self.update_monitor_list()
         if not self._is_adaptive:
@@ -102,6 +107,10 @@ class BrightnessController:
     def supported_monitors(self):
         return self._supported_monitors
 
+    @property
+    def monitor_list_updated(self):
+        return self._monitor_list_updated
+
     async def wait_for_task(self, task: str) -> None:
         if task not in self._task_queue:
             raise ValueError(f"Task {task} not found in task queue")
@@ -111,20 +120,8 @@ class BrightnessController:
     def switch_to_next_task(self) -> None:
         self._current_task = (self._current_task + 1) % len(self._task_queue)
 
-    def pause_main_loop(self) -> None:
-        """
-        Pauses the main loop of the brightness controller.
-        """
-        self.__paused = True
-
-    def unpause_main_loop(self) -> None:
-        """
-        Unpauses the main loop of the brightness controller.
-        """
-        self.__paused = False
-
     async def wait_for_unpause(self) -> None:
-        while self.__paused:
+        while self.paused:
             await asyncio.sleep(1.0)
 
     def set_brightness(self, brightness: int, monitors: list[str] = None) -> None:
@@ -151,7 +148,7 @@ class BrightnessController:
 
         while True:
             anim_step_start_time = time()
-            if self.update_monitor_list():
+            if self._all_monitors != sbc.list_monitors():
                 return
             progress = (anim_step_start_time - start_time) / duration
             current_brightness = round(start_brightness + progress * brightness_range)
@@ -161,7 +158,7 @@ class BrightnessController:
             self.set_brightness(current_brightness, monitors)
             anim_step_end_time = time()
             anim_step_elapsed_time = anim_step_end_time - anim_step_start_time
-            await asyncio.sleep(max(0.0, anim_step_duration - anim_step_elapsed_time))
+            await asyncio.sleep(anim_step_duration - anim_step_elapsed_time)
 
     @staticmethod
     def get_supported_monitors(monitors: list[str] = None) -> list[str]:
@@ -177,7 +174,7 @@ class BrightnessController:
                 sbc.get_brightness(display=monitor)
                 supported_monitors.append(monitor)
             except sbc.exceptions.ScreenBrightnessError:
-                continue
+                pass
         return supported_monitors
 
     def update_monitor_list(self) -> bool:
@@ -232,6 +229,21 @@ class BrightnessController:
             )
         return brightness
 
+    async def update_monitor_list_task(self):
+        """
+        Continuously updates the lists of all monitors and supported monitors.
+        """
+        while True:
+            await self.wait_for_task("monitor_list")
+            start_time = time()
+
+            self._monitor_list_updated = self.update_monitor_list()
+
+            self.switch_to_next_task()
+            end_time = time()
+            elapsed_time = end_time - start_time
+            self.__sum_elapsed_time += elapsed_time
+
     async def brightness_control_task(
         self,
         location: LocationInfo,
@@ -241,10 +253,9 @@ class BrightnessController:
         """
         while True:
             await self.wait_for_task("control")
-            await self.wait_for_unpause()
             start_time = time()
-            current_time = datetime.now(location.timezone)
 
+            current_time = datetime.now(location.timezone)
             sun_data = sun(
                 location.observer, date=current_time.date(), tzinfo=location.timezone
             )
@@ -259,27 +270,26 @@ class BrightnessController:
             self.switch_to_next_task()
             end_time = time()
             elapsed_time = end_time - start_time
-            await asyncio.sleep(max(self._interval / 4, self._interval - elapsed_time))
+            self.__sum_elapsed_time += elapsed_time
 
     async def brightness_adaptation_task(self) -> None:
         """
         Continuously adapts brightness based on content on the screen.
         """
-        camera = dxcam.create()
         pixel_density = 60
+        camera = dxcam.create()
         div = round(camera.height / pixel_density)
         brightness_adaptation_range = (self._max - self._min) / 2
 
         while True:
             await self.wait_for_task("adaptation")
-            await self.wait_for_unpause()
             start_time = time()
-            if self.update_monitor_list():
+
+            if self._monitor_list_updated:
                 del camera
                 camera = dxcam.create()
                 div = round(camera.height / pixel_density)
             screenshot = camera.grab()
-
             if screenshot is not None:
                 max_by_subpixels = np.max(
                     screenshot[div:-div:div, div:-div:div],
@@ -297,7 +307,7 @@ class BrightnessController:
             self.switch_to_next_task()
             end_time = time()
             elapsed_time = end_time - start_time
-            await asyncio.sleep(max(self._interval / 4, self._interval - elapsed_time))
+            self.__sum_elapsed_time += elapsed_time
 
     async def brightness_update_task(
         self,
@@ -308,9 +318,9 @@ class BrightnessController:
         last_brightness = sbc.get_brightness(display=self._supported_monitors[0])[0]
         while True:
             await self.wait_for_task("update")
-            await self.wait_for_unpause()
             start_time = time()
-            if self.update_monitor_list():
+
+            if self._monitor_list_updated:
                 last_brightness = sbc.get_brightness(
                     display=self._supported_monitors[0]
                 )[0]
@@ -321,7 +331,6 @@ class BrightnessController:
                 self._min,
                 min(self._max, current_brightness),
             )
-
             if current_brightness != last_brightness:
                 await self.set_brightness_smoothly(
                     last_brightness,
@@ -332,7 +341,17 @@ class BrightnessController:
             self.switch_to_next_task()
             end_time = time()
             elapsed_time = end_time - start_time
-            await asyncio.sleep(max(self._interval / 4, self._interval - elapsed_time))
+            self.__sum_elapsed_time += elapsed_time
+
+    async def sleep_task(self) -> None:
+        while True:
+            await self.wait_for_task("sleep")
+
+            await asyncio.sleep(self._interval - self.__sum_elapsed_time)
+            await self.wait_for_unpause()
+            self.__sum_elapsed_time = 0.0
+
+            self.switch_to_next_task()
 
     async def start_main_loop(self, location: LocationInfo) -> None:
         """
@@ -340,9 +359,13 @@ class BrightnessController:
         """
         async with asyncio.TaskGroup() as tg:
             for task in self._task_queue:
-                if task == "control":
+                if task == "monitor_list":
+                    tg.create_task(self.update_monitor_list_task())
+                elif task == "control":
                     tg.create_task(self.brightness_control_task(location))
                 elif task == "adaptation":
                     tg.create_task(self.brightness_adaptation_task())
                 elif task == "update":
                     tg.create_task(self.brightness_update_task())
+                elif task == "sleep":
+                    tg.create_task(self.sleep_task())
