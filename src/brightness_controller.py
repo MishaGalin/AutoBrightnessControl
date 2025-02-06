@@ -276,10 +276,22 @@ class BrightnessController:
         """
         Continuously adapts brightness based on content on the screen.
         """
-        pixel_density = 60
+        pixel_density = 60  # not ppi
         camera = dxcam.create()
         div = round(camera.height / pixel_density)
         brightness_adaptation_range = (self._max - self._min) / 2
+        gamma_lut = np.array([(i / 255.0) ** 2.2 for i in range(256)], dtype=np.float32)
+        weights = None
+
+        def init_weights(h: int, w: int) -> np.ndarray:
+            y, x = np.ogrid[:h, :w]
+            center_y, center_x = h // 2, w // 2
+            sigma = min(center_x, center_y) / 2
+            w_matrix = np.exp(
+                -((x - center_x) ** 2 + (y - center_y) ** 2) / (2 * sigma**2),
+                dtype=np.float32,
+            )
+            return w_matrix / w_matrix.sum()
 
         while True:
             await self.wait_for_task("adaptation")
@@ -289,17 +301,22 @@ class BrightnessController:
                 del camera
                 camera = dxcam.create()
                 div = round(camera.height / pixel_density)
+                weights = None
             screenshot = camera.grab()
             if screenshot is not None:
-                max_by_subpixels = np.max(
-                    screenshot[div:-div:div, div:-div:div],
+                max_by_subpixels = gamma_lut[np.max(
+                    screenshot[::div, ::div],
                     axis=2,
-                )
-                # Get a sub-matrix of pixels with a step of 'div' excluding the edges
+                )]
+                # Get a sub-matrix of pixels with a step of 'div'
                 # and then find a subpixel with the highest color value in each pixel
 
+                if weights is None:
+                    weights = init_weights(*max_by_subpixels.shape)
+                weighted_mean = np.sum(max_by_subpixels * weights)
+
                 brightness_addition = (
-                    np.mean(max_by_subpixels) / 255.0 - 0.5
+                    weighted_mean - 0.5
                 ) * brightness_adaptation_range
                 # 0 - 255   to   (-1/4 of brightness range) - (1/4 of brightness range)
 
