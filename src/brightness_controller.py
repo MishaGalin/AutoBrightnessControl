@@ -4,8 +4,6 @@ from math import sin, pi, sqrt
 from datetime import datetime, timedelta
 from astral.sun import sun
 from astral import LocationInfo
-import dxcam
-import numpy as np
 import asyncio
 import screen_brightness_control as sbc
 
@@ -276,6 +274,11 @@ class BrightnessController:
         """
         Continuously adapts brightness based on content on the screen.
         """
+        import dxcam
+        import numpy as np
+        # I understand that it's not considered good practice to import modules in a function
+        # but in this case it's more efficient because this is an optional task
+
         pixel_density = 60  # not ppi
         camera = dxcam.create()
         div = round(camera.height / pixel_density)
@@ -304,10 +307,12 @@ class BrightnessController:
                 weights = None
             screenshot = camera.grab()
             if screenshot is not None:
-                max_by_subpixels = gamma_lut[np.max(
-                    screenshot[::div, ::div],
-                    axis=2,
-                )]
+                max_by_subpixels = gamma_lut[
+                    np.max(
+                        screenshot[::div, ::div],
+                        axis=2,
+                    )
+                ]
                 # Get a sub-matrix of pixels with a step of 'div'
                 # and then find a subpixel with the highest color value in each pixel
 
