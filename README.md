@@ -10,6 +10,13 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
+# Compile to .exe file
+
+```
+pip install pyinstaller
+pyinstaller --onefile --noconsole --icon=icon32.ico --name=AutoBrightnessControl brightness_control.py
+```
+
 # How to use
 
 All you have to do is to run ```AutoBrightnessControl.exe``` (unless you want to change something with arguments). You don't need to have python interpreter or any python libraries installed. Also, one of the main goals was to keep the application's load on the system almost zero.
@@ -72,51 +79,50 @@ First, we define a brightness adaptation range equal to half the brightness rang
 brightness_adaptation_range = (self.max - self.min) / 2
 ```
 
-Every period of time, the program takes a screenshot of your screen. It is not saved on disk, but only stored in RAM until a new screenshot is taken.
+Periodically capture a screenshot using dxcam and store it in RAM:
 
 ```
 screenshot = camera.grab()
 ```
 
-Next, only a very small part of the pixels is taken from the full screenshot
+Use a subset of pixels from the screenshot with a step size determined by pixel_density:
 
 ```
 pixel_density = 60
-divider = round(screenshot.shape[0] / pixel_density)
-pixels = screenshot[divider:-divider:divider, divider:-divider:divider]
+div = round(camera.height / pixel_density)
+pixels = screenshot[::div, ::div]
 ```
 
-We take the maximums by subpixels, so that, for example, pixel (0, 0, 255) is equivalent to pixel (255, 255, 255)
+For each pixel, take the maximum value among its subpixels (R, G, B) and apply gamma correction:
 
 ```
-max_by_subpixels = np.max(pixels, axis=2)
+max_by_subpixels = gamma_lut[np.max(pixels, axis=2)]
 ```
 
-Taking the average of these maximums and transforming the ranges, we get how much we want to change the brightness relative to the base brightness (the brightness determined by the time of day)
+Use a Gaussian-weighted matrix to prioritize the central area of the screen:
 
 ```
-brightness_addition = (
-    np.mean(max_by_subpixels) / 255.0 - 0.5
-) * brightness_adaptation_range
-# 0 - 255   to   (-1/4 of brightness range) - (1/4 of brightness range)
+weighted_mean = np.sum(max_by_subpixels * weights)
+```
 
+Compute the brightness adjustment based on the weighted mean:
+
+```
+brightness_addition = (weighted_mean - 0.5) * brightness_adaptation_range
+```
+
+Adjust the brightness relative to the base brightness:
+
+```
 self.adapted_brightness = self.base_brightness + brightness_addition
 ```
 
 When setting this brightness to monitors, it will be limited by the minimum and maximum brightness set by the user
 
 ```
-current_brightness = max(
-    self.min,
-    min(self.max, current_brightness),
-)
+current_brightness = max(self._min, min(self._max, current_brightness))
 
-if current_brightness != last_brightness:
-    await self.set_brightness_smoothly(
-        last_brightness,
-        current_brightness,
-        self.interval / 2,
-    )
+await self.set_brightness_smoothly(last_brightness, current_brightness, self.interval / 2)
 ```
 
 ---
