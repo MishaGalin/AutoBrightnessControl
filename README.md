@@ -10,6 +10,13 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
+# Compile to .exe file
+
+```
+pip install pyinstaller
+pyinstaller --onefile --noconsole --icon=icon32.ico --name=AutoBrightnessControl brightness_control.py
+```
+
 # How to use
 
 All you have to do is to run ```AutoBrightnessControl.exe``` (unless you want to change something with arguments). You don't need to have python interpreter or any python libraries installed. Also, one of the main goals was to keep the application's load on the system almost zero.
