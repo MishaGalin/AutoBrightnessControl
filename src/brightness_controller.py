@@ -6,6 +6,7 @@ from astral.sun import sun
 from astral import LocationInfo
 import asyncio
 import screen_brightness_control as sbc
+from pytz import timezone
 
 
 class BrightnessController:
@@ -249,19 +250,17 @@ class BrightnessController:
         """
         Continuously controls brightness based on sunrise and sunset.
         """
+        time_zone = timezone(location.timezone)
         while True:
             await self.wait_for_task("control")
             start_time = time()
 
-            current_time = datetime.now(location.timezone)
-            sun_data = sun(
-                location.observer, date=current_time.date(), tzinfo=location.timezone
-            )
-            sunrise, sunset = sun_data["sunrise"], sun_data["sunset"]
+            current_time = datetime.now(time_zone)
+            sun_data = sun(location.observer, date=current_time)
 
             self._base_brightness = self.calculate_base_brightness(
-                sunrise,
-                sunset,
+                sun_data["sunrise"],
+                sun_data["sunset"],
                 current_time,
             )
 
@@ -276,6 +275,7 @@ class BrightnessController:
         """
         import dxcam
         import numpy as np
+
         # I understand that it's not considered good practice to import modules in a function
         # but in this case it's more efficient because this is an optional task
 
@@ -357,7 +357,7 @@ class BrightnessController:
                 await self.set_brightness_smoothly(
                     last_brightness,
                     current_brightness,
-                    self._interval / 2,
+                    min(2.0, self._interval / 2),
                 )
                 last_brightness = current_brightness
             self.switch_to_next_task()

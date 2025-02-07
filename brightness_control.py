@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from astral import LocationInfo
 from src.brightness_controller import BrightnessController
-from src.location import get_and_save_coordinates, get_and_save_timezone
+from src.location import get_and_save_location_data
 import os
 import psutil
 import asyncio
@@ -45,8 +45,6 @@ async def main():
     min_brightness = args.min
     max_brightness = args.max
     change_speed = args.speed
-    latitude = args.lat
-    longitude = args.lng
     adaptive_brightness = args.adapt
     update_interval = args.interval
 
@@ -66,10 +64,10 @@ async def main():
         update_interval,
     )
 
-    if latitude is None or longitude is None:
-        latitude, longitude = get_and_save_coordinates()
-    timezone = get_and_save_timezone()
-    location = LocationInfo(timezone=timezone, latitude=latitude, longitude=longitude)
+    latitude, longitude, time_zone = get_and_save_location_data()
+    if args.lat is not None and args.lng is not None:
+        latitude, longitude = args.lat, args.lng
+    location = LocationInfo(timezone=time_zone, latitude=latitude, longitude=longitude)
 
     await controller.start_main_loop(location)
 
