@@ -21,7 +21,7 @@ pyinstaller --onefile --noconsole --icon=icon32.ico --name=AutoBrightnessControl
 
 All you have to do is to run ```AutoBrightnessControl.exe``` (unless you want to change something with arguments). You don't need to have python interpreter or any python libraries installed. Also, one of the main goals was to keep the application's load on the system almost zero.
 
-You can also create a task in Windows Task Manager to have this app autorun on startup with desired arguments using ```create_task.bat``` (run as administrator) if it is in the same folder as ```AutoBrightnessControl.exe```.
+You can also create a task in Windows Task Scheduler to have this app autorun on startup with desired arguments using ```create_task.bat``` (run as administrator) if it is in the same folder as ```AutoBrightnessControl.exe```.
 
 ![Screenshot_46](https://github.com/user-attachments/assets/eca81afc-cd2f-45ee-96a2-e526d4d4be4c)
 
