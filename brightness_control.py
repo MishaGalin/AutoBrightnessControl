@@ -11,7 +11,7 @@ PROCESS_NAME = "AutoBrightnessControl.exe"
 
 def kill_existing_instances():
     """
-    Closes any existing instances of the program.
+    Closes any existing instances of the program
     """
     for proc in psutil.process_iter(["pid", "name"]):
         try:
@@ -29,8 +29,9 @@ async def main():
     default_change_speed = 1.0
     default_latitude = None
     default_longitude = None
-    default_adaptive_brightness = False
-    default_update_interval = 2.0
+    default_adaptive = False
+    default_primary_only = False
+    default_interval = 2.0
 
     parser = ArgumentParser()
     parser.add_argument("--min", type=int, default=default_min_brightness)
@@ -38,15 +39,17 @@ async def main():
     parser.add_argument("--speed", type=float, default=default_change_speed)
     parser.add_argument("--lat", type=float, default=default_latitude)
     parser.add_argument("--lng", type=float, default=default_longitude)
-    parser.add_argument("--adapt", type=bool, default=default_adaptive_brightness)
-    parser.add_argument("--interval", type=float, default=default_update_interval)
+    parser.add_argument("--adaptive", type=bool, default=default_adaptive)
+    parser.add_argument("--primary-only", type=bool, default=default_primary_only)
+    parser.add_argument("--interval", type=float, default=default_interval)
     args = parser.parse_args()
 
     min_brightness = args.min
     max_brightness = args.max
     change_speed = args.speed
-    adaptive_brightness = args.adapt
-    update_interval = args.interval
+    adaptive_brightness = args.adaptive
+    primary_only = args.primary_only
+    interval = args.interval
 
     if not (0 <= min_brightness <= 100):
         raise ValueError("Minimum brightness must be between 0 and 100")
@@ -54,20 +57,21 @@ async def main():
         raise ValueError("Maximum brightness must be between 0 and 100")
     if min_brightness >= max_brightness:
         raise ValueError("Minimum brightness must be less than maximum brightness")
-    if update_interval <= 0:
+    if interval <= 0:
         raise ValueError("Update interval must be greater than 0")
     controller = BrightnessController(
         min_brightness,
         max_brightness,
         change_speed,
         adaptive_brightness,
-        update_interval,
+        primary_only,
+        interval,
     )
 
     latitude, longitude, time_zone = get_and_save_location_data()
     if args.lat is not None and args.lng is not None:
         latitude, longitude = args.lat, args.lng
-    location = LocationInfo(timezone=time_zone, latitude=latitude, longitude=longitude)
+    location = LocationInfo(latitude=latitude, longitude=longitude, timezone=time_zone)
 
     await controller.start_main_loop(location)
 

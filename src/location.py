@@ -21,11 +21,11 @@ def get_location_data() -> dict:
         response = get(url="https://ipinfo.io/json", timeout=10)
         response.raise_for_status()
         data = response.json()
-        latitude, longitude = data["loc"].split(",")
+        latitude, longitude = map(float, data["loc"].split(","))
         time_zone = data["timezone"]
         return {
-            "latitude": float(latitude),
-            "longitude": float(longitude),
+            "latitude": latitude,
+            "longitude": longitude,
             "timezone": time_zone,
         }
     except (RequestException, ValueError, KeyError):

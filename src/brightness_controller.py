@@ -15,14 +15,16 @@ class BrightnessController:
         min_brightness: int = 20,
         max_brightness: int = 70,
         change_speed: float = 1.0,
-        adaptive_brightness: bool = False,
-        update_interval: float = 2.0,
+        adaptive: bool = False,
+        primary_only: bool = False,
+        interval: float = 2.0,
     ) -> None:
         self._min = min_brightness
         self._max = max_brightness
         self.change_speed = change_speed
-        self._is_adaptive = adaptive_brightness
-        self._interval = update_interval
+        self._adaptive = adaptive
+        self._primary_only = primary_only
+        self._interval = interval
 
         self._base_brightness = 0.0
         self._adapted_brightness = 0.0
@@ -41,7 +43,7 @@ class BrightnessController:
         self.__sum_elapsed_time = 0.0
 
         self.update_monitor_list()
-        if not self._is_adaptive:
+        if not self._adaptive:
             self._task_queue.remove("adaptation")
 
     @property
@@ -69,8 +71,8 @@ class BrightnessController:
         self._max = value
 
     @property
-    def is_adaptive(self):
-        return self._is_adaptive
+    def adaptive(self):
+        return self._adaptive
 
     @property
     def interval(self):
@@ -182,6 +184,8 @@ class BrightnessController:
         Returns True if the list of all monitors has changed.
         """
         new_all_monitors = sbc.list_monitors()
+        if self._primary_only:
+            new_all_monitors = [new_all_monitors[0]]
         if self._all_monitors != new_all_monitors:
             self._all_monitors = new_all_monitors
             self._supported_monitors = self.get_supported_monitors(self._all_monitors)
@@ -347,7 +351,7 @@ class BrightnessController:
                     display=self._supported_monitors[0]
                 )[0]
             current_brightness = round(
-                self._adapted_brightness if self._is_adaptive else self._base_brightness
+                self._adapted_brightness if self._adaptive else self._base_brightness
             )
             current_brightness = max(
                 self._min,
