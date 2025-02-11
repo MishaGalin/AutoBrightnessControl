@@ -35,9 +35,9 @@ You can get your coordinates on this website: https://www.latlong.net/
 
 Full list of arguments:
 
-```--min``` - Minimum brightness (default: 20)
+```--min``` - Minimum brightness in percent (default: 20)
 
-```--max``` - Maximum brightness (default: 70)
+```--max``` - Maximum brightness in percent (default: 70)
 
 ```--speed``` - Lower values make the transition around sunset and sunrise faster. Recommended value is from 0.5 to 1.0 (default: 1.0)
 
