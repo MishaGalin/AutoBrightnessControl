@@ -1,7 +1,6 @@
 from json import dump, load
 from os import path
 from requests import get, RequestException
-from ctypes import windll
 
 
 def save_to_file(data: dict, file_name: str) -> None:
@@ -44,12 +43,5 @@ def get_and_save_location_data():
     else:
         location_data = load_from_file(file_name)
     if not location_data:
-        windll.user32.MessageBoxW(
-            0,
-            "Error: Unable to determine location data.\n\n"
-            "Please check your internet connection or set data manually.",
-            "AutoBrightnessControl",
-            0,
-        )
         raise RuntimeError("Unable to determine location data")
     return location_data.values()

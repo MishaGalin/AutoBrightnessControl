@@ -1,17 +1,17 @@
-from ctypes import windll
 from time import time
 from math import sin, pi, sqrt
 from datetime import datetime, timedelta
 from astral.sun import sun
 from astral import LocationInfo
+from pytz import timezone
 import asyncio
 import screen_brightness_control as sbc
-from pytz import timezone
 
 
 class BrightnessController:
     def __init__(
         self,
+        location: LocationInfo,
         min_brightness: int = 20,
         max_brightness: int = 70,
         change_speed: float = 1.0,
@@ -19,6 +19,7 @@ class BrightnessController:
         primary_only: bool = False,
         interval: float = 2.0,
     ) -> None:
+        self.location = location
         self._min = min_brightness
         self._max = max_brightness
         self.change_speed = change_speed
@@ -40,7 +41,6 @@ class BrightnessController:
         self._supported_monitors = []
         self._monitor_list_updated = False
         self.paused = False
-        self.__sum_elapsed_time = 0.0
 
         self.update_monitor_list()
         if not self._adaptive:
@@ -190,12 +190,6 @@ class BrightnessController:
             self._all_monitors = new_all_monitors
             self._supported_monitors = self.get_supported_monitors(self._all_monitors)
             if not self._supported_monitors:
-                windll.user32.MessageBoxW(
-                    0,
-                    "Error: No supported monitors found",
-                    "AutoBrightnessControl",
-                    0,
-                )
                 raise RuntimeError("No supported monitors found")
             return True
         return False
@@ -238,29 +232,21 @@ class BrightnessController:
         """
         while True:
             await self.wait_for_task("monitor_list")
-            start_time = time()
-
             self._monitor_list_updated = self.update_monitor_list()
-
             self.switch_to_next_task()
-            end_time = time()
-            elapsed_time = end_time - start_time
-            self.__sum_elapsed_time += elapsed_time
 
     async def brightness_control_task(
         self,
-        location: LocationInfo,
     ) -> None:
         """
         Continuously controls brightness based on sunrise and sunset.
         """
-        time_zone = timezone(location.timezone)
+        time_zone = timezone(self.location.timezone)
         while True:
             await self.wait_for_task("control")
-            start_time = time()
 
             current_time = datetime.now(time_zone)
-            sun_data = sun(location.observer, date=current_time)
+            sun_data = sun(self.location.observer, date=current_time)
 
             self._base_brightness = self.calculate_base_brightness(
                 sun_data["sunrise"],
@@ -269,9 +255,6 @@ class BrightnessController:
             )
 
             self.switch_to_next_task()
-            end_time = time()
-            elapsed_time = end_time - start_time
-            self.__sum_elapsed_time += elapsed_time
 
     async def brightness_adaptation_task(self) -> None:
         """
@@ -302,7 +285,6 @@ class BrightnessController:
 
         while True:
             await self.wait_for_task("adaptation")
-            start_time = time()
 
             if self._monitor_list_updated:
                 del camera
@@ -331,9 +313,6 @@ class BrightnessController:
 
                 self._adapted_brightness = self._base_brightness + brightness_addition
             self.switch_to_next_task()
-            end_time = time()
-            elapsed_time = end_time - start_time
-            self.__sum_elapsed_time += elapsed_time
 
     async def brightness_update_task(
         self,
@@ -344,7 +323,6 @@ class BrightnessController:
         last_brightness = sbc.get_brightness(display=self._supported_monitors[0])[0]
         while True:
             await self.wait_for_task("update")
-            start_time = time()
 
             if self._monitor_list_updated:
                 last_brightness = sbc.get_brightness(
@@ -365,21 +343,20 @@ class BrightnessController:
                 )
                 last_brightness = current_brightness
             self.switch_to_next_task()
-            end_time = time()
-            elapsed_time = end_time - start_time
-            self.__sum_elapsed_time += elapsed_time
 
     async def sleep_task(self) -> None:
+        last_time_stamp = time()
         while True:
             await self.wait_for_task("sleep")
 
-            await asyncio.sleep(self._interval - self.__sum_elapsed_time)
+            time_difference = time() - last_time_stamp
+            await asyncio.sleep(self._interval - time_difference)
             await self.wait_for_unpause()
-            self.__sum_elapsed_time = 0.0
+            last_time_stamp = time()
 
             self.switch_to_next_task()
 
-    async def start_main_loop(self, location: LocationInfo) -> None:
+    async def start_main_loop(self) -> None:
         """
         Starts the main loop of the brightness controller.
         """
@@ -388,7 +365,7 @@ class BrightnessController:
                 if task == "monitor_list":
                     tg.create_task(self.update_monitor_list_task())
                 elif task == "control":
-                    tg.create_task(self.brightness_control_task(location))
+                    tg.create_task(self.brightness_control_task())
                 elif task == "adaptation":
                     tg.create_task(self.brightness_adaptation_task())
                 elif task == "update":
