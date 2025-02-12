@@ -41,9 +41,9 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: 1.3.13.3
+          tag: 1.3.13.4
           name: "AutoBrightnessControl v1.3.13"
-          body: "The main change in version 1.3.x was adaptive brightness change depending on the content on the screen. I understand that not everyone needs such a feature, that's why there is an argument --adapt.\n\n- Now the application works correctly with both monitors that support brightness control and those that do not\n- Significantly improved reliability when switching monitors"
+          body: "The main change in version 1.3.x was adaptive brightness change depending on the content on the screen. I understand that not everyone needs such a feature, that's why there is an argument --adaptive.\n\n- Now the application works correctly with both monitors that support brightness control and those that do not\n- Significantly improved reliability when switching monitors"
           draft: false
           prerelease: false
           makeLatest: true

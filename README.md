@@ -5,6 +5,8 @@
 
 # Environment Setup
 
+- Python 3.11+ required
+
 ```
 python -m pip install --upgrade pip
 pip install -r requirements.txt
@@ -23,7 +25,7 @@ All you have to do is to run ```AutoBrightnessControl.exe``` (unless you want to
 
 You can also create a task in Windows Task Scheduler to have this app autorun on startup with desired arguments using ```create_task.bat``` (run as administrator) if it is in the same folder as ```AutoBrightnessControl.exe```.
 
-![Screenshot_46](https://github.com/user-attachments/assets/eca81afc-cd2f-45ee-96a2-e526d4d4be4c)
+![1](https://github.com/user-attachments/assets/30210b55-9826-4961-930d-660041f9b861)
 
 Latitude, longitude and time zone are determined by your IP address using https://ipinfo.io/json so it would be determined incorrectly if you are using a VPN when the app launches.
 
@@ -35,9 +37,9 @@ You can get your coordinates on this website: https://www.latlong.net/
 
 Full list of arguments:
 
-```--min``` - Minimum brightness (default: 20)
+```--min``` - Minimum brightness in percent (default: 20)
 
-```--max``` - Maximum brightness (default: 70)
+```--max``` - Maximum brightness in percent (default: 70)
 
 ```--speed``` - Lower values make the transition around sunset and sunrise faster. Recommended value is from 0.5 to 1.0 (default: 1.0)
 
@@ -45,7 +47,9 @@ Full list of arguments:
 
 ```--lng``` - Longitude (default: automatic detection)
 
-```--adapt``` - Enable adaptive brightness (default: False)
+```--adaptive``` - Enable adaptive brightness (default: False)
+
+```--primary-only``` - Brightness changes apply to the primary monitor only (default: False)
 
 ```--interval``` - Update interval in seconds (default: 2.0)
 
