@@ -5,6 +5,8 @@
 
 # Environment Setup
 
+- Python 3.11+ required
+
 ```
 python -m pip install --upgrade pip
 pip install -r requirements.txt
