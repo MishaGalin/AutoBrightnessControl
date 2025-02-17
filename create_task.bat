@@ -24,7 +24,7 @@ schtasks /delete /tn "%taskOnWakeUpName%" /f >nul 2>&1
 
 :: Create a new task
 schtasks /create /tn "%taskOnStartUpName%" /tr "\"%exePath%\" %args%" /sc onlogon /rl highest >nul 2>&1
-schtasks /create /sc onevent /rl highest >nul 2>&1 /mo "*[System[Provider[@Name='Microsoft-Windows-Kernel-Power'] and EventID=107]]" /ec System /tn "%taskOnWakeUpName%" /tr "\"%exePath%\" %args%"
+schtasks /create /sc onevent /rl highest >nul 2>&1 /mo "*[System[Provider[@Name='Microsoft-Windows-Kernel-Power'] and EventID=107]]" /ec System /tn "%taskOnWakeUpName%" /tr "\"%exePath%\" %args%" /delay 0000:01
 
 :: Check if the task was created successfully
 if %errorlevel% equ 0 (
