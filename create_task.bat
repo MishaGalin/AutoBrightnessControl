@@ -14,19 +14,19 @@ if not exist "%exePath%" (
     exit /b
 )
 
-:: Task name
+:: Task names
 set taskOnStartUpName=AutoBrightnessControlTaskOnStartUp
 set taskOnWakeUpName=AutoBrightnessControlTaskOnWakeUp
 
-:: Delete existing task with the same name (if any)
+:: Delete existing tasks with the same name (if any)
 schtasks /delete /tn "%taskOnStartUpName%" /f >nul 2>&1
 schtasks /delete /tn "%taskOnWakeUpName%" /f >nul 2>&1
 
-:: Create a new task
+:: Create new tasks
 schtasks /create /tn "%taskOnStartUpName%" /tr "\"%exePath%\" %args%" /sc onlogon /rl highest >nul 2>&1
 schtasks /create /sc onevent /rl highest >nul 2>&1 /mo "*[System[Provider[@Name='Microsoft-Windows-Kernel-Power'] and EventID=107]]" /ec System /tn "%taskOnWakeUpName%" /tr "\"%exePath%\" %args%" /delay 0000:01
 
-:: Check if the task was created successfully
+:: Check if the tasks was created successfully
 if %errorlevel% equ 0 (
     echo Task successfully created and will run AutoBrightnessControl.exe at system logon.
     echo Running the created task now...
